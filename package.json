@@ -1,0 +1,19 @@
+{
+	"name": "web5-components",
+	"version": "1.0.0",
+	"description": "a collection of components for rendering various kinds of Web5 data",
+	"scripts": {
+		"clean": "rm -rf dist",
+		"build": "node esbuild.mjs"
+	},
+	"dependencies": {
+		"ajv": "8.12.0",
+		"jsonpath": "1.1.1",
+		"lit": "2.6.0"
+	},
+	"devDependencies": {
+		"@esbuild-plugins/node-globals-polyfill": "0.1.1",
+		"@esbuild-plugins/node-modules-polyfill": "0.1.4",
+		"esbuild": "0.16.7"
+	}
+}

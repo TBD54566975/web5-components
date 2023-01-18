@@ -2,9 +2,8 @@
 
 There are many ways to be an open source contributor, and we're here to help you on your way! You may:
 
-* Propose ideas in our 
-  [discussion forums](https://forums.tbd.website)
-* Raise an issue or feature request in our [issue tracker](LINK_HERE)  ___***FIX LINK AND REMOVE THIS NOTICE***___
+* Propose ideas in our [discussion forums](https://forums.tbd.website)
+* Raise an issue or feature request in our [issue tracker](https://github.com/TBD54566975/web5-components/issues)
 * Help another contributor with one of their questions, or a code review
 * Suggest improvements to our Getting Started documentation by supplying a Pull Request
 * Evangelize our work together in conferences, podcasts, and social media spaces.
@@ -13,171 +12,33 @@ This guide is for you.
 
 ## Development Prerequisites
 
-___***UPDATE TABLE OF PROJECT DEPS AND INSTALLATION NOTES***___
+| Requirement | Tested Version | Installation Instructions                                                                                                                                                                                                                                                                                                         |
+| ----------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Node.js`   | `v16.17.0`     | There are many ways to install `Node.js`. Feel free to choose whichever approach you feel the most comfortable with. If you don't have a preferred installation method, you can visit the official [downloads](https://nodejs.org/en/download/) page and choose the the appropriate installer respective to your operating system |
 
-| Requirement | Tested Version | Installation Instructions                            |
-|-------------|----------------|------------------------------------------------------|
-| Go          | 1.17.6         |[go.dev](https://go.dev/doc/tutorial/compile-install) |
-| Mage        | 1.12.1         |[magefile.org](https://magefile.org/)                 |
-| Java        | 17.0.2         | Below, recommended via [SDKMan](https://sdkman.io)   |
 
-### Go
+## Setup Instructions
 
-This project is written in Go, a modern, open source programming language. 
-
-You may verify your `go` installation via the terminal:
-
-```
-$> go version
-go version go1.17.6 darwin/amd64
+```bash
+git clone https://github.com/TBD54566975/web5-components
+cd web5-components
+npm install
+npm run build
 ```
 
-If you do not have go, we recommend installing it by:
-
-#### MacOS
-
-##### Homebrew
-```
-$> brew install go
-```
-
-#### Linux
-
-See the [Go Installation Documentation](https://go.dev/doc/install).
-
-### Mage
-
-The build is run by Mage.
-
-You may verify your `mage` installation via the terminal:
-
-```
-$> mage --version
-Mage Build Tool 1.12.1
-Build Date: 2021-12-15T21:00:02Z
-Commit: 2f1ec40
-built with: go1.17.6
-```
-
-#### MacOS
-
-##### Homebrew
-
-```
-$> brew install mage
-```
-
-#### Linux
-
-Installation instructions are on the [Magefile home page](https://magefile.org/).
-
-### Java
-
-This project is written in Java, a typesafe, compiled programming language. 
-
-You may verify your `java` installation via the terminal by running `java -version`.
-
-If you do not have Java, we recommend installing it 
-via [SDKMan](https://sdkman.io/install). This is a project which will allow you 
-to easily install the Java Development Kit (JDK), runtime (JRE), and related frameworks, 
-build tools, and runtimes.
-
-After you've installed SDKMan, you may install Java:
-
-#### SDKMan (cross-platform instructions)
-
-```shell
-$> sdk install java 
- ...
-Do you want java 17.0.2-open to be set as default? (Y/n): Y
-Setting java 17.0.2-open as default.
-```
-
-You may test your installation:
-
-```shell
-$> java -version
-openjdk version "17.0.2" 2022-01-18
-OpenJDK Runtime Environment (build 17.0.2+8-86)
-OpenJDK 64-Bit Server VM (build 17.0.2+8-86, mixed mode, sharing)
-```
-
----
-**NOTE**
-
-You may additionally look for other Java versions to install by running `sdk list java`:
-
-...or other installation candidates like Apache Ant, Apache Maven, etc, by running `sdk list`.
-
-Consult the SDKMan documentation for more info.
-
----
-
-## Build (Mage)
-
-```
-$> mage build
-```
-
-## Build (Java / Gradle)
-
-### macOS / Linux
-```shell
-$> ./gradlew build
-```
-
-### Windows
-```shell
-$> gradlew.bat build
-```
-
-## Test (Mage)
-
-```
-$> mage test
-```
-
-## Test (Java / Gradle)
-
-### macOS / Linux
-```shell
-$> ./gradlew test
-```
-
-### Windows
-```shell
-$> gradlew.bat test
-```
-
----
-**NOTE**
-
-You may also combine Gradle build targets in one call, like:
-
-```shell
-$> ./gradlew clean build test
-```
-
----
+You can then use any of the files in the `dist` folder to experiment.
 
 ## Communications
 
 ### Issues
 
-Anyone from the community is welcome (and encouraged!) to raise issues via 
-[GitHub Issues](LINK_HERE)  ___***FIX LINK AND REMOVE THIS NOTICE***___.
+Anyone from the community is welcome (and encouraged!) to raise issues via [GitHub Issues](https://github.com/TBD54566975/web5-components/issues).
 
 ### Discussions
 
 Design discussions and proposals take place on our [discussion forums](https://forums.tbd.website).
 
 We advocate an asynchronous, written debate model - so write up your thoughts and invite the community to join in!
-
-### Continuous Integration
-
-Build and Test cycles are run on every commit to every branch on [CircleCI](LINK_HERE).
-
- ___***FIX LINK ABOVE AND REMOVE THIS NOTICE***___
 
 ## Contribution
 

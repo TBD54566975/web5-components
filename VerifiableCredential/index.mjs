@@ -1,42 +1,9 @@
 import AJV from "ajv";
 import JSONPath from "jsonpath";
-import { LitElement, css, html, nothing } from "lit";
-import { ifDefined } from 'lit/directives/if-defined.js';
-import { map } from 'lit/directives/map.js';
-import { when } from "lit/directives/when.js";
 
 const VERSION = "https://identity.foundation/credential-manifest/spec/v1.0.0/";
 
-function isURL(string) {
-	try {
-		new URL(string);
-	} catch {
-		return false;
-	}
-	return true;
-}
-
-function verifyType(value, typeOrValidator) {
-	if (typeof typeOrValidator === "string" && typeof value !== typeOrValidator)
-		return undefined;
-	if (typeof typeOrValidator === "function" && !typeOrValidator(value))
-		return undefined;
-	return value;
-}
-
-function isHexColor(value) {
-	return /^#[0-9A-F]{6}$/i.test(value);
-}
-
-export class VerifiableCredential extends LitElement {
-	static properties = {
-		src: { type: String, attribute: "src" },
-		data: { type: Object, attribute: false },
-
-		manifest: { type: String, attribute: "manifest" },
-	};
-
-	static styles = css`
+const STYLE = `
 .descriptor {
 	box-sizing: border-box;
 	display: flex;
@@ -119,95 +86,236 @@ export class VerifiableCredential extends LitElement {
 }
 `;
 
-	static shadowRootOptions = {
-		...LitElement.shadowRootOptions,
-		mode: "closed",
-	};
+function isURL(string) {
+	try {
+		new URL(string);
+	} catch {
+		return false;
+	}
+	return true;
+}
 
-	shouldUpdate(changedProperties) {
-		let shouldUpdate = true;
+function verifyType(value, typeOrValidator) {
+	if (typeof typeOrValidator === "string" && typeof value !== typeOrValidator)
+		return undefined;
+	if (typeof typeOrValidator === "function" && !typeOrValidator(value))
+		return undefined;
+	return value;
+}
 
-		if (changedProperties.has("src")) {
-			shouldUpdate = false;
+function isHexColor(value) {
+	return /^#[0-9A-F]{6}$/i.test(value);
+}
 
-			fetch(this.src)
+export class VerifiableCredential extends HTMLElement {
+	static #style = null;
+
+	#data = null;
+	#srcFetchAbortController = null;
+
+	#manifest = null;
+	#manifestFetchAbortController = null;
+
+	#root;
+
+	constructor() {
+		super();
+
+		this.#root = this.attachShadow({ mode: "closed" });
+
+		if (!VerifiableCredential.#style) {
+			VerifiableCredential.#style = new CSSStyleSheet;
+			VerifiableCredential.#style.replaceSync(STYLE);
+		}
+		this.#root.adoptedStyleSheets = [ VerifiableCredential.#style ];
+	}
+
+	get src() {
+		return this.getAttribute("src");
+	}
+	set src(src) {
+		if (typeof src === "string")
+			this.setAttribute("src", src);
+	}
+
+	get data() { return this.#data; }
+	set data(data) {
+		if (typeof data !== "object" || data !== undefined)
+			return;
+
+		if (this.#srcFetchAbortController) {
+			this.#srcFetchAbortController.abort();
+			this.#srcFetchAbortController = null;
+		}
+
+		this.#data = data;
+		this.#update();
+	}
+
+	get manifest() { return this.#manifest; }
+	set manifest(manifest) {
+		if (typeof manifest === "string") {
+			this.setAttribute("manifest", manifest);
+			return;
+		}
+
+		if (typeof manifest !== "object" || manifest !== undefined)
+			return;
+
+		if (this.#manifestFetchAbortController) {
+			this.#manifestFetchAbortController.abort();
+			this.#manifestFetchAbortController = null;
+		}
+
+		this.#manifest = manifest;
+		this.#update();
+	}
+
+	static observedAttributes = [ "src", "manifest" ];
+	attributeChangedCallback(name, oldValue, newValue) {
+		switch (name) {
+		case "src":
+			this.#srcFetchAbortController?.abort();
+			this.#srcFetchAbortController = new AbortController;
+
+			fetch(newValue, { signal: this.#srcFetchAbortController.signal })
 				.then((response) => response.json())
 				.then((json) => {
 					this.data = json;
+				})
+				.catch((error) => {
+					if (error.name !== "AbortError")
+						throw error; // surface `fetch` errors for developers
 				});
-		}
+			return;
 
-		if (changedProperties.has("manifest") && typeof this.manifest === "string") {
-			shouldUpdate = false;
+		case "manifest":
+			this.#manifestFetchAbortController?.abort();
+			this.#manifestFetchAbortController = new AbortController;
 
-			fetch(this.manifest)
+			fetch(newValue, { signal: this.#manifestFetchAbortController.signal })
 				.then((response) => response.json())
 				.then((json) => {
 					this.manifest = json;
+				})
+				.catch((error) => {
+					if (error.name !== "AbortError")
+						throw error; // surface `fetch` errors for developers
 				});
+			return;
 		}
-
-		return shouldUpdate;
 	}
 
-	render() {
-		if (typeof this.data !== "object" || typeof this.manifest !== "object")
-			return nothing;
+	#update() {
+		this.#root.textContent = ""; // remove all children
 
-		if (this.manifest["spec_version"] !== VERSION)
-			return nothing;
+		if (!this.#data || typeof this.#data !== "object")
+			return;
 
-		return html`${map(this.manifest["output_descriptors"], (descriptor) => {
+		if (!this.#manifest || typeof this.#manifest !== "object")
+			return;
+
+		if (this.#manifest["spec_version"] !== VERSION)
+			return;
+
+		let descriptors = verifyType(this.#manifest["output_descriptors"], Array.isArray) ?? [ ];
+		for (let descriptor of descriptors) {
 			if (!descriptor)
-				return nothing;
+				continue;
 
-			let thumbnailURI = verifyType(descriptor?.["styles"]?.["thumbnail"]?.["uri"], "string");
-			let thumbnailAlt = verifyType(descriptor?.["styles"]?.["thumbnail"]?.["alt"], "string");
-			let heroURI = verifyType(descriptor?.["styles"]?.["hero"]?.["uri"], "string");
-			let heroAlt = verifyType(descriptor?.["styles"]?.["hero"]?.["alt"], "string");
-			let backgroundColor = verifyType(descriptor?.["styles"]?.["background"]?.["color"], isHexColor);
-			let textColor = verifyType(descriptor?.["styles"]?.["text"]?.["color"], isHexColor);
+			let descriptorStyle = "";
 
-			let style = "";
+			let textColor = verifyType(descriptor["styles"]?.["text"]?.["color"], isHexColor);
 			if (textColor)
-				style += `color:${textColor};`;
+				descriptorStyle += `color:${textColor};`;
+
+			let backgroundColor = verifyType(descriptor["styles"]?.["background"]?.["color"], isHexColor);
 			if (backgroundColor)
-				style += `background-color:${backgroundColor};`;
+				descriptorStyle += `background-color:${backgroundColor};`;
 
-			let title = this.#getValue(descriptor?.["display"]?.["title"]);
-			let subtitle = this.#getValue(descriptor?.["display"]?.["subtitle"]);
-			let description = this.#getValue(descriptor?.["display"]?.["description"]);
+			let descriptorElement = this.#root.appendChild(document.createElement("section"));
+			descriptorElement.classList.add("descriptor");
+			if (descriptorStyle)
+				descriptorElement.style = descriptorStyle;
 
-			return html`
-<section class="descriptor" style="${ifDefined(style)}">
-	${when(isURL(thumbnailURI), () => html`<img class="thumbnail" src="${thumbnailURI}" alt="${ifDefined(thumbnailAlt)}" hidden @load=${this.#handleThumbnailLoad} @error=${this.#handleError}>`)}
-	${when(isURL(heroURI), () => html`<img class="hero" src="${heroURI}" alt="${ifDefined(heroAlt)}" hidden @load=${this.#handleHeroLoad} @error=${this.#handleError}>`)}
-	${when(title, () => html`<h1 class="title">${title}</h1>`)}
-	${when(subtitle, () => html`<h2 class="subtitle">${subtitle}</h2>`)}
-	${when(description, () => html`<p class="description">${description}</p>`)}
-	<ul class="properties">
-		${map(descriptor?.["display"]?.["properties"], (property) => {
-			let label = property?.["label"];
+			let thumbnailURI = verifyType(descriptor["styles"]?.["thumbnail"]?.["uri"], "string");
+			if (isURL(thumbnailURI)) {
+				let thumbnailElement = descriptorElement.appendChild(document.createElement("img"));
+				thumbnailElement.classList.add("thumbnail");
+				thumbnailElement.src = thumbnailURI;
+				thumbnailElement.hidden = true;
+				thumbnailElement.addEventListener("load", this.#handleThumbnailLoad.bind(this));
+				thumbnailElement.addEventListener("error", this.#handleImageError.bind(this));
 
-			let value = this.#getValue(property);
+				let thumbnailAlt = verifyType(descriptor["styles"]?.["thumbnail"]?.["alt"], "string");
+				if (thumbnailAlt)
+					thumbnailElement.alt = thumbnailAlt;
+			}
 
-			return html`
-		<li class="property">
-			${when(label, () => html`<span class="label">${label}</span>`)}
-			${when(value, () => html`<span class="value">${value}</span>`)}
-		</li>
-`;
-		})}
-	</ul>
-</section>
-`;
-		})}`;
+			let heroURI = verifyType(descriptor["styles"]?.["hero"]?.["uri"], "string");
+			if (isURL(heroURI)) {
+				let heroElement = descriptorElement.appendChild(document.createElement("img"));
+				heroElement.classList.add("hero");
+				heroElement.src = heroURI;
+				heroElement.hidden = true;
+				heroElement.addEventListener("load", this.#handleHeroLoad.bind(this));
+				heroElement.addEventListener("error", this.#handleImageError.bind(this));
+
+				let heroAlt = verifyType(descriptor["styles"]?.["hero"]?.["alt"], "string");
+				if (heroAlt)
+					heroElement.alt = heroAlt;
+			}
+
+			let title = this.#getValue(descriptor["display"]?.["title"]);
+			if (title) {
+				let titleElement = descriptorElement.appendChild(document.createElement("h1"));
+				titleElement.classList.add("title");
+				titleElement.textContent = title;
+			}
+
+			let subtitle = this.#getValue(descriptor["display"]?.["subtitle"]);
+			if (subtitle) {
+				let subtitleElement = descriptorElement.appendChild(document.createElement("h2"));
+				subtitleElement.classList.add("subtitle");
+				subtitleElement.textContent = subtitle;
+			}
+
+			let description = this.#getValue(descriptor["display"]?.["description"]);
+			if (description) {
+				let descriptionElement = descriptorElement.appendChild(document.createElement("p"));
+				descriptionElement.classList.add("description");
+				descriptionElement.textContent = description;
+			}
+
+			let propertiesElement = descriptorElement.appendChild(document.createElement("ul"));
+			propertiesElement.classList.add("properties");
+
+			let properties = verifyType(descriptor["display"]?.["properties"], Array.isArray) ?? [ ];
+			for (let property of properties) {
+				if (!property)
+					continue;
+
+				let propertyElement = propertiesElement.appendChild(document.createElement("li"));
+				propertyElement.classList.add("property");
+
+				let label = verifyType(property["label"], "string");
+				if (label) {
+					let labelElement = propertyElement.appendChild(document.createElement("span"));
+					labelElement.classList.add("label");
+					labelElement.textContent = label;
+				}
+
+				let value = this.#getValue(property);
+				if (value) {
+					let valueElement = propertyElement.appendChild(document.createElement("span"));
+					valueElement.classList.add("value");
+					valueElement.textContent = value;
+				}
+			}
+		}
 	}
 
 	#getValue(descriptor) {
-		if (descriptor === undefined)
-			return undefined;
-
 		if ("text" in descriptor)
 			return verifyType(descriptor["text"], "string");
 
@@ -238,7 +346,7 @@ export class VerifiableCredential extends LitElement {
 
 	#getFirstMatchingValue(paths) {
 		for (let path of paths) {
-			let values = JSONPath.query(this.data, path, 1);
+			let values = JSONPath.query(this.#data, path, 1);
 			if (values.length > 0)
 				return values[0];
 		}
@@ -270,7 +378,7 @@ export class VerifiableCredential extends LitElement {
 		descriptorElement.style.setProperty("--hero-height", height);
 	}
 
-	#handleError(event) {
+	#handleImageError(event) {
 		event.target.remove();
 	}
 }

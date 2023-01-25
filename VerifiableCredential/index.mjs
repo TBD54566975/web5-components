@@ -215,13 +215,17 @@ export class VerifiableCredential extends HTMLElement {
 		if (!this.#manifest || typeof this.#manifest !== "object")
 			return;
 
+		// <https://identity.foundation/credential-manifest/#versioning>
 		if (this.#manifest["spec_version"] !== VERSION)
 			return;
 
+		// <https://identity.foundation/credential-manifest/#output-descriptor>
 		let descriptors = verifyType(this.#manifest["output_descriptors"], Array.isArray) ?? [ ];
 		for (let descriptor of descriptors) {
 			if (!descriptor)
 				continue;
+
+			// <https://identity.foundation/wallet-rendering/#entity-styles>
 
 			let descriptorStyle = "";
 
@@ -266,21 +270,23 @@ export class VerifiableCredential extends HTMLElement {
 					heroElement.alt = heroAlt;
 			}
 
-			let title = this.#getValue(descriptor["display"]?.["title"]);
+			// <https://identity.foundation/wallet-rendering/#data-display>
+
+			let title = this.#resolveDisplayMappingObject(descriptor["display"]?.["title"]);
 			if (title) {
 				let titleElement = descriptorElement.appendChild(document.createElement("h1"));
 				titleElement.classList.add("title");
 				titleElement.textContent = title;
 			}
 
-			let subtitle = this.#getValue(descriptor["display"]?.["subtitle"]);
+			let subtitle = this.#resolveDisplayMappingObject(descriptor["display"]?.["subtitle"]);
 			if (subtitle) {
 				let subtitleElement = descriptorElement.appendChild(document.createElement("h2"));
 				subtitleElement.classList.add("subtitle");
 				subtitleElement.textContent = subtitle;
 			}
 
-			let description = this.#getValue(descriptor["display"]?.["description"]);
+			let description = this.#resolveDisplayMappingObject(descriptor["display"]?.["description"]);
 			if (description) {
 				let descriptionElement = descriptorElement.appendChild(document.createElement("p"));
 				descriptionElement.classList.add("description");
@@ -298,6 +304,7 @@ export class VerifiableCredential extends HTMLElement {
 				let propertyElement = propertiesElement.appendChild(document.createElement("li"));
 				propertyElement.classList.add("property");
 
+				// <https://identity.foundation/wallet-rendering/#labeled-display-mapping-object>
 				let label = verifyType(property["label"], "string");
 				if (label) {
 					let labelElement = propertyElement.appendChild(document.createElement("span"));
@@ -305,7 +312,7 @@ export class VerifiableCredential extends HTMLElement {
 					labelElement.textContent = label;
 				}
 
-				let value = this.#getValue(property);
+				let value = this.#resolveDisplayMappingObject(property);
 				if (value) {
 					let valueElement = propertyElement.appendChild(document.createElement("span"));
 					valueElement.classList.add("value");
@@ -315,10 +322,13 @@ export class VerifiableCredential extends HTMLElement {
 		}
 	}
 
-	#getValue(descriptor) {
+	// <https://identity.foundation/wallet-rendering/#display-mapping-object>
+	#resolveDisplayMappingObject(descriptor) {
+		// <https://identity.foundation/wallet-rendering/#using-text>
 		if ("text" in descriptor)
 			return verifyType(descriptor["text"], "string");
 
+		// <https://identity.foundation/wallet-rendering/#using-path>
 		if ("path" in descriptor) {
 			let fallback = verifyType(descriptor["fallback"], "string");
 
@@ -326,7 +336,7 @@ export class VerifiableCredential extends HTMLElement {
 			if (path === undefined)
 				return fallback;
 
-			let value = this.#getFirstMatchingValue(path);
+			let value = this.#getFirstValueMatchingPaths(path);
 			if (value === undefined)
 				return fallback;
 
@@ -344,7 +354,7 @@ export class VerifiableCredential extends HTMLElement {
 		return undefined;
 	}
 
-	#getFirstMatchingValue(paths) {
+	#getFirstValueMatchingPaths(paths) {
 		for (let path of paths) {
 			let values = JSONPath.query(this.#data, path, 1);
 			if (values.length > 0)

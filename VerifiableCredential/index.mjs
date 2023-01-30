@@ -60,7 +60,11 @@ const STYLE = `
 	position: relative;
 	z-index: 3;
 	margin: 0;
-	padding: var(--spacing) 0 0;
+	padding: 0;
+}
+
+.descriptor .description:not(:first-child) {
+	padding-top: var(--spacing);
 }
 
 .descriptor .properties {
@@ -69,7 +73,11 @@ const STYLE = `
 	gap: var(--spacing);
 	z-index: 3;
 	margin: 0;
-	padding: var(--spacing) 0 0;
+	padding: 0;
+}
+
+.descriptor .properties:not(:first-child) {
+	padding-top: var(--spacing);
 }
 
 .descriptor .properties .property {

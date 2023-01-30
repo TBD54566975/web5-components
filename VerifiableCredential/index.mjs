@@ -13,13 +13,15 @@ const STYLE = `
 	max-width: min(100%, calc(var(--hero-width, 100%) * 1px));
 	max-height: min(100%, calc(var(--hero-height, 100%) * 1px));
 	aspect-ratio: var(--hero-width) / var(--hero-height);
-	padding: 1em;
+	padding: var(--spacing);
+
+	--spacing: 1.5em;
 }
 
 .descriptor .thumbnail {
 	position: absolute;
-	top: 1em;
-	left: 1em;
+	top: var(--spacing);
+	left: var(--spacing);
 	z-index: 2;
 	max-width: 32px;
 	max-height: 32px;
@@ -54,20 +56,20 @@ const STYLE = `
 	position: relative;
 	z-index: 3;
 	margin: 0;
-	padding: 0.5em 0 0;
+	padding: var(--spacing) 0 0;
 }
 
 .descriptor .properties {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 1.5em;
+	gap: var(--spacing);
 	z-index: 3;
 	margin: 0;
-	padding: 1.5em 0 0;
+	padding: var(--spacing) 0 0;
 }
 
 .descriptor .properties .property {
-	width: calc(50% - 0.75em);
+	width: calc(50% - (var(--spacing) / 2));
 	list-style-type: none;
 }
 

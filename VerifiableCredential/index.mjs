@@ -225,22 +225,18 @@ export class VerifiableCredential extends HTMLElement {
 			if (!descriptor)
 				continue;
 
-			// <https://identity.foundation/wallet-rendering/#entity-styles>
+			let descriptorElement = this.#root.appendChild(document.createElement("section"));
+			descriptorElement.classList.add("descriptor");
 
-			let descriptorStyle = "";
+			// <https://identity.foundation/wallet-rendering/#entity-styles>
 
 			let textColor = verifyType(descriptor["styles"]?.["text"]?.["color"], isHexColor);
 			if (textColor)
-				descriptorStyle += `color:${textColor};`;
+				descriptorElement.style.setProperty("color", textColor);
 
 			let backgroundColor = verifyType(descriptor["styles"]?.["background"]?.["color"], isHexColor);
 			if (backgroundColor)
-				descriptorStyle += `background-color:${backgroundColor};`;
-
-			let descriptorElement = this.#root.appendChild(document.createElement("section"));
-			descriptorElement.classList.add("descriptor");
-			if (descriptorStyle)
-				descriptorElement.style = descriptorStyle;
+				descriptorElement.style.setProperty("background-color", backgroundColor);
 
 			let thumbnailURI = verifyType(descriptor["styles"]?.["thumbnail"]?.["uri"], "string");
 			if (isURL(thumbnailURI)) {

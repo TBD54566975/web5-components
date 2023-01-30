@@ -140,7 +140,7 @@ export class VerifiableCredential extends HTMLElement {
 
 	get data() { return this.#data; }
 	set data(data) {
-		if (typeof data !== "object" || data !== undefined)
+		if (!data || typeof data !== "object")
 			return;
 
 		if (this.#srcFetchAbortController) {
@@ -159,7 +159,7 @@ export class VerifiableCredential extends HTMLElement {
 			return;
 		}
 
-		if (typeof manifest !== "object" || manifest !== undefined)
+		if (!manifest || typeof manifest !== "object")
 			return;
 
 		if (this.#manifestFetchAbortController) {

@@ -80,9 +80,16 @@ const STYLE = `
 	overflow: hidden;
 }
 
-.descriptor .properties .property::before {
-	margin: 0 0.3em 0 0.5em;
-	content: "\\2022";
+.descriptor .properties .property + .property {
+	margin-top: 1em;
+}
+
+.descriptor .properties .property .label {
+	display: block;
+	margin-bottom: 0.25em;
+	font-size: 0.5em;
+	text-transform: uppercase;
+	opacity: 0.5;
 }
 `;
 

@@ -4,6 +4,32 @@ import JSONPath from "jsonpath";
 const VERSION = "https://identity.foundation/credential-manifest/spec/v1.0.0/";
 
 const STYLE = `
+:host {
+	--spacing: 1.5em;
+}
+
+:host > :not(:first-child) {
+	padding-top: calc(var(--spacing) / 2);
+	border-top-right-radius: 0;
+	border-top-left-radius: 0;
+}
+
+:host > :not(:last-child) {
+	padding-bottom: calc(var(--spacing) / 2);
+	border-bottom-right-radius: 0;
+	border-bottom-left-radius: 0;
+}
+
+.issuer {
+	box-sizing: border-box;
+	position: relative;
+	max-width: min(100%, calc(var(--hero-width, 100%) * 1px));
+	max-height: min(100%, calc(var(--hero-height, 100%) * 1px));
+	aspect-ratio: var(--hero-width) / var(--hero-height);
+	padding: var(--spacing);
+	border-radius: inherit;
+}
+
 .descriptor {
 	box-sizing: border-box;
 	display: flex;
@@ -15,20 +41,15 @@ const STYLE = `
 	aspect-ratio: var(--hero-width) / var(--hero-height);
 	padding: var(--spacing);
 	border-radius: inherit;
-
-	--spacing: 1.5em;
 }
 
-.descriptor .thumbnail {
-	position: absolute;
-	top: var(--spacing);
-	left: var(--spacing);
+:is(.issuer, .descriptor) .thumbnail {
 	z-index: 2;
 	max-width: 32px;
 	max-height: 32px;
 }
 
-.descriptor .hero {
+:is(.issuer, .descriptor) .hero {
 	position: absolute;
 	top: 0;
 	right: 0;
@@ -37,6 +58,14 @@ const STYLE = `
 	z-index: 1;
 	max-width: 100%;
 	max-height: 100%;
+}
+
+.issuer .name {
+	position: relative;
+	z-index: 3;
+	margin: 0;
+	padding: 0;
+	font-size: 0.8em;
 }
 
 .descriptor .title {
@@ -228,6 +257,23 @@ export class VerifiableCredential extends HTMLElement {
 		if (this.#manifest["spec_version"] !== VERSION)
 			return;
 
+		// <https://identity.foundation/credential-manifest/#general-composition>
+
+		let issuer = verifyType(this.#manifest["issuer"], "object");
+		if (issuer) {
+			let issuerElement = this.#root.appendChild(document.createElement("section"));
+			issuerElement.classList.add("issuer");
+
+			this.#applyEntityStyles(issuer["styles"], issuerElement);
+
+			let name = verifyType(issuer["name"], "string");
+			if (name) {
+				let nameElement = issuerElement.appendChild(document.createElement("h1"));
+				nameElement.classList.add("name");
+				nameElement.textContent = name;
+			}
+		}
+
 		// <https://identity.foundation/credential-manifest/#output-descriptor>
 		let descriptors = verifyType(this.#manifest["output_descriptors"], Array.isArray) ?? [ ];
 		for (let descriptor of descriptors) {
@@ -237,43 +283,7 @@ export class VerifiableCredential extends HTMLElement {
 			let descriptorElement = this.#root.appendChild(document.createElement("section"));
 			descriptorElement.classList.add("descriptor");
 
-			// <https://identity.foundation/wallet-rendering/#entity-styles>
-
-			let textColor = verifyType(descriptor["styles"]?.["text"]?.["color"], isHexColor);
-			if (textColor)
-				descriptorElement.style.setProperty("color", textColor);
-
-			let backgroundColor = verifyType(descriptor["styles"]?.["background"]?.["color"], isHexColor);
-			if (backgroundColor)
-				descriptorElement.style.setProperty("background-color", backgroundColor);
-
-			let thumbnailURI = verifyType(descriptor["styles"]?.["thumbnail"]?.["uri"], "string");
-			if (isURL(thumbnailURI)) {
-				let thumbnailElement = descriptorElement.appendChild(document.createElement("img"));
-				thumbnailElement.classList.add("thumbnail");
-				thumbnailElement.src = thumbnailURI;
-				thumbnailElement.hidden = true;
-				thumbnailElement.addEventListener("load", this.#handleThumbnailLoad.bind(this));
-				thumbnailElement.addEventListener("error", this.#handleImageError.bind(this));
-
-				let thumbnailAlt = verifyType(descriptor["styles"]?.["thumbnail"]?.["alt"], "string");
-				if (thumbnailAlt)
-					thumbnailElement.alt = thumbnailAlt;
-			}
-
-			let heroURI = verifyType(descriptor["styles"]?.["hero"]?.["uri"], "string");
-			if (isURL(heroURI)) {
-				let heroElement = descriptorElement.appendChild(document.createElement("img"));
-				heroElement.classList.add("hero");
-				heroElement.src = heroURI;
-				heroElement.hidden = true;
-				heroElement.addEventListener("load", this.#handleHeroLoad.bind(this));
-				heroElement.addEventListener("error", this.#handleImageError.bind(this));
-
-				let heroAlt = verifyType(descriptor["styles"]?.["hero"]?.["alt"], "string");
-				if (heroAlt)
-					heroElement.alt = heroAlt;
-			}
+			this.#applyEntityStyles(descriptor["styles"], descriptorElement);
 
 			// <https://identity.foundation/wallet-rendering/#data-display>
 
@@ -335,6 +345,66 @@ export class VerifiableCredential extends HTMLElement {
 		}
 	}
 
+	// <https://identity.foundation/wallet-rendering/#entity-styles>
+	#applyEntityStyles(data, containerElement) {
+		if (!data)
+			return;
+
+		function handleThumbnailLoad(event) {
+			event.target.hidden = false;
+		}
+
+		function handleHeroLoad(event) {
+			let width = event.target.naturalWidth;
+			let height = event.target.naturalHeight;
+
+			event.target.hidden = false;
+
+			containerElement.style.setProperty("--hero-width", width);
+			containerElement.style.setProperty("--hero-height", height);
+		}
+
+		function handleImageError(event) {
+			event.target.remove();
+		}
+
+		let textColor = verifyType(data["text"]?.["color"], isHexColor);
+		if (textColor)
+			containerElement.style.setProperty("color", textColor);
+
+		let backgroundColor = verifyType(data["background"]?.["color"], isHexColor);
+		if (backgroundColor)
+			containerElement.style.setProperty("background-color", backgroundColor);
+
+		let thumbnailURI = verifyType(data["thumbnail"]?.["uri"], "string");
+		if (isURL(thumbnailURI)) {
+			let thumbnailElement = containerElement.appendChild(document.createElement("img"));
+			thumbnailElement.classList.add("thumbnail");
+			thumbnailElement.src = thumbnailURI;
+			thumbnailElement.hidden = true;
+			thumbnailElement.addEventListener("load", handleThumbnailLoad);
+			thumbnailElement.addEventListener("error", handleImageError);
+
+			let thumbnailAlt = verifyType(data["thumbnail"]?.["alt"], "string");
+			if (thumbnailAlt)
+				thumbnailElement.alt = thumbnailAlt;
+		}
+
+		let heroURI = verifyType(data["hero"]?.["uri"], "string");
+		if (isURL(heroURI)) {
+			let heroElement = containerElement.appendChild(document.createElement("img"));
+			heroElement.classList.add("hero");
+			heroElement.src = heroURI;
+			heroElement.hidden = true;
+			heroElement.addEventListener("load", handleHeroLoad);
+			heroElement.addEventListener("error", handleImageError);
+
+			let heroAlt = verifyType(data["hero"]?.["alt"], "string");
+			if (heroAlt)
+				heroElement.alt = heroAlt;
+		}
+	}
+
 	// <https://identity.foundation/wallet-rendering/#display-mapping-object>
 	#resolveDisplayMappingObject(descriptor) {
 		// <https://identity.foundation/wallet-rendering/#using-text>
@@ -384,25 +454,6 @@ export class VerifiableCredential extends HTMLElement {
 			return "No";
 
 		return value;
-	}
-
-	#handleThumbnailLoad(event) {
-		event.target.hidden = false;
-	}
-
-	#handleHeroLoad(event) {
-		let width = event.target.naturalWidth;
-		let height = event.target.naturalHeight;
-
-		event.target.hidden = false;
-
-		let descriptorElement = event.target.parentElement;
-		descriptorElement.style.setProperty("--hero-width", width);
-		descriptorElement.style.setProperty("--hero-height", height);
-	}
-
-	#handleImageError(event) {
-		event.target.remove();
 	}
 }
 customElements.define("verifiable-credential", VerifiableCredential);

@@ -14,6 +14,7 @@ const STYLE = `
 	max-height: min(100%, calc(var(--hero-height, 100%) * 1px));
 	aspect-ratio: var(--hero-width) / var(--hero-height);
 	padding: var(--spacing);
+	border-radius: inherit;
 
 	--spacing: 1.5em;
 }

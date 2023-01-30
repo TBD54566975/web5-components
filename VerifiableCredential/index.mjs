@@ -67,21 +67,17 @@ const STYLE = `
 }
 
 .descriptor .properties {
-	position: relative;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1.5em;
 	z-index: 3;
 	margin: 0;
-	padding: 0.5em 0 0;
+	padding: 1.5em 0 0;
 }
 
 .descriptor .properties .property {
+	width: calc(50% - 0.75em);
 	list-style-type: none;
-	white-space: nowrap;
-	text-overflow: ellipsis;
-	overflow: hidden;
-}
-
-.descriptor .properties .property + .property {
-	margin-top: 1em;
 }
 
 .descriptor .properties .property .label {

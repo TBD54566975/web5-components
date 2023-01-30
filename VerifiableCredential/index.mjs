@@ -310,6 +310,8 @@ export class VerifiableCredential extends HTMLElement {
 					let labelElement = propertyElement.appendChild(document.createElement("span"));
 					labelElement.classList.add("label");
 					labelElement.textContent = label;
+
+					propertyElement.append(" ");
 				}
 
 				let valueElement = propertyElement.appendChild(document.createElement("span"));

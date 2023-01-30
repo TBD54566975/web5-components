@@ -14,12 +14,14 @@ A basic `<verifiable-credential>` custom element that renders a [verifiable cred
 
 ## Layout
 
-The size of the `<verifiable-credential>` will be the minimum of the space made available for it by the parent and the size of the `"hero"` (if provided).  `<verifiable-credential>` will also match the aspect ratio of the `"hero"` (if provided).
+The `<verifiable-credential>` will contain a section for the `"issuer"` and each item in `"output_descriptors"`.
 
-The `"thumbnail"` of the [credential manifest](https://identity.foundation/credential-manifest/) is rendered in the top left corner (if provided).
+The size of each section will be the minimum of the space made available for it by the parent and the size of the `"hero"` (if provided).  Each section will also match the aspect ratio of the `"hero"` (if provided).
 
-The `"title"`, `"subtitle"`, `"description"`, and `"properties"` are rendered in the bottom left corner (if provided).  They are each allowed only one line of text.
+The `"thumbnail"` of the [credential manifest](https://identity.foundation/credential-manifest/) is rendered in the top left corner of the section (if provided).
+
+The `"title"`, `"subtitle"`, `"description"`, and `"properties"` are rendered in the bottom left corner of the section (if provided).
 
 ## Style
 
-`<verifiable-credential>` will inherit the `font` of its parent.
+Any default inheritable properties (e.g. `font`, `border-radius`, etc.) will be inherited from the parent of the `<verifiable-credential>` (though sequential sections will not have `border-radius` applied in between) unless overridden by a value in the [credential manifest](https://identity.foundation/credential-manifest/) (e.g. `"text"`, `"background",` etc.).

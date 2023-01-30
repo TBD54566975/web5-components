@@ -41,9 +41,6 @@ const STYLE = `
 	z-index: 3;
 	margin: 0;
 	padding: 0;
-	white-space: nowrap;
-	text-overflow: ellipsis;
-	overflow: hidden;
 }
 
 .descriptor .subtitle {
@@ -51,9 +48,6 @@ const STYLE = `
 	z-index: 3;
 	margin: 0;
 	padding: 0;
-	white-space: nowrap;
-	text-overflow: ellipsis;
-	overflow: hidden;
 }
 
 .descriptor .description {
@@ -61,9 +55,6 @@ const STYLE = `
 	z-index: 3;
 	margin: 0;
 	padding: 0.5em 0 0;
-	white-space: nowrap;
-	text-overflow: ellipsis;
-	overflow: hidden;
 }
 
 .descriptor .properties {

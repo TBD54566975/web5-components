@@ -12,7 +12,7 @@ const STYLE = `
 	position: relative;
 	max-width: min(100%, calc(var(--hero-width, 100%) * 1px));
 	max-height: min(100%, calc(var(--hero-height, 100%) * 1px));
-	aspect-ratio: var(--hero-width, 1) / var(--hero-height, 1);
+	aspect-ratio: var(--hero-width) / var(--hero-height);
 	padding: 1em;
 }
 

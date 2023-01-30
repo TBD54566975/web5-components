@@ -13,6 +13,10 @@ npm run build
 
 You can then use any of the files in the `dist` folder to experiment.
 
+## Demo
+
+start any webserver of your choice (e.g. `python3 -m http.server <port>`) and navigate to `localhost:<port>/demo/` in any web browser
+
 ## Project Resources
 
 | Resource                                   | Description                                                                    |

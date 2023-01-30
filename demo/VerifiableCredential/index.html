@@ -1,0 +1,303 @@
+<body>
+<main>
+	<section id="data">
+		<h3>Verifiable Credential</h3>
+		<textarea></textarea>
+	</section>
+	<section id="manifest">
+		<form></form>
+		<textarea></textarea>
+	</section>
+	<section id="preview">
+		<h3>Preview</h3>
+	</section>
+</main>
+<style>
+body {
+	margin: 0;
+	font-family: sans-serif;
+}
+
+main {
+	box-sizing: border-box;
+	display: flex;
+	gap: 1em;
+	min-height: 100%;
+	padding: 1em;
+}
+
+main > section {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+}
+
+main > section > h3 {
+	margin: 0;
+}
+
+input[type="text"] {
+	min-width: 20em;
+	font-family: monospace;
+	color: hsl(0, 0%, 90%);
+	background-color: hsl(0, 0%, 10%);
+}
+
+textarea {
+	flex-grow: 1;
+	width: 100%;
+	min-height: 10em;
+	padding: 0.25em;
+	line-height: 1.5;
+	color: #f8f8f2;
+	background-color: #272822;
+	tab-size: 2;
+	resize: vertical;
+}
+
+/* remove unnecessary spacing */
+.je-header {
+	margin: 0;
+}
+
+/* remove redundant labels */
+.je-object__container:not([data-schemapath="root"]) > .je-object__title,
+[data-schemapath$=".properties"] > .je-header > label,
+[data-schemapath$=".path"] .je-form-input-label {
+	display: none;
+}
+
+/* remove unnecessary editors */
+.je-switcher,
+[data-schemapath$=".schema"] {
+	display: none;
+}
+
+/* remove redundant borders */
+.je-object__container > .je-indented-panel {
+	margin: 0 !important;
+	padding: 0 !important;
+	border: none !important;
+}
+
+/* add spacing between inputs */
+[data-schematype] + [data-schematype],
+.row + .row {
+	margin-top: 0.25em;
+}
+
+/* render string inputs on the same line as the label */
+[data-schematype="string"] > .form-control {
+	display: flex;
+	gap: 0.25em;
+}
+
+/* render the delete button on the same line as the string input */
+[data-schematype="array"] [data-schematype="string"] {
+	display: flex;
+	gap: 0.1em;
+}
+
+/* remove redundant borders and spacing for path array */
+[data-schemapath$=".path"] [data-schematype="string"] {
+	margin: 0.25em 0;
+	padding: 0;
+	border: none;
+}
+
+/* move the add button to the end of the properties tab */
+[data-schemapath$=".properties"] {
+	display: flex;
+	flex-direction: column;
+}
+[data-schemapath$=".properties"] > .je-header {
+	order: 1;
+}
+
+/* remove unnecessary spacing before the add button in the properties tab */
+[data-schemapath$=".properties"] > .je-header > .je-header-button-holder {
+	margin-left: 0;
+}
+
+/* add spacing above delete button in properties tab */
+[data-schemapath$=".properties"] [data-schematype="object"] > .je-indented-panel {
+	margin-bottom: 0.25em;
+}
+
+verifiable-credential {
+	display: block;
+	max-width: 300px;
+	margin: 1em auto;
+	border-radius: 1em;
+	box-shadow: 0 1px 5px hsl(0, 0%, 10%);
+}
+</style>
+<script type="module">
+import "../jsoneditor.min.js";
+import VERIFIABLE_CREDENTIAL from "../VerifiableCredential.json" assert { type: "json" };
+import CREDENTIAL_MANIFEST from "../CredentialManifest.json" assert { type: "json" };
+import { VerifiableCredential } from "../../dist/VerifiableCredential.mjs";
+
+let dataRawEditor = document.querySelector("#data > textarea");
+dataRawEditor.addEventListener("input", () => {
+	update();
+});
+
+const EntityStylesObjectSchema = {
+	type: "object",
+	format: "categories",
+	properties: {
+		"thumbnail": {
+			type: "object",
+			format: "grid",
+			properties: {
+				"uri": { type: "string" },
+				"alt": { type: "string" },
+			},
+		},
+		"hero": {
+			type: "object",
+			format: "grid",
+			properties: {
+				"uri": { type: "string" },
+				"alt": { type: "string" },
+			},
+		},
+		"background": {
+			type: "object",
+			format: "grid",
+			properties: {
+				"color": { type: "string" },
+			},
+		},
+		"text": {
+			type: "object",
+			format: "grid",
+			properties: {
+				"color": { type: "string" },
+			},
+		},
+	},
+};
+
+const DisplayMappingObjectSchema = {
+	type: "object",
+	properties: {
+		"path": {
+			type: "array",
+			items: { type: "string" },
+		},
+		"schema": {
+			type: "object",
+			properties: {
+				"type": { type: "string" },
+				"format": { type: "string" },
+			},
+		},
+		"fallback": { type: "string" },
+		"text": { type: "string" },
+	},
+};
+
+let manifestFormEditor = new JSONEditor(document.querySelector("#manifest > form"), {
+	disable_array_delete_all_rows: true,
+	disable_array_delete_last_row: true,
+	disable_array_reorder: true,
+	disable_collapse: true,
+	disable_edit_json: true,
+	disable_properties: true,
+	prompt_before_delete: false,
+	remove_empty_properties: true,
+	schema: {
+		title: "Credential Manifest",
+		type: "object",
+		format: "categories",
+		basicCategoryTitle: "Misc",
+		properties: {
+			"issuer": {
+				type: "object",
+				format: "categories",
+				basicCategoryTitle: "Misc",
+				properties: {
+					"id": { type: "string" },
+					"name": { type: "string" },
+					"styles": EntityStylesObjectSchema,
+				},
+			},
+			"output_descriptors": {
+				type: "array",
+				format: "tabs-top",
+				items: {
+					type: "object",
+					format: "categories",
+					basicCategoryTitle: "Misc",
+					properties: {
+						"styles": EntityStylesObjectSchema,
+						"display": {
+							type: "object",
+							format: "categories",
+							properties: {
+								"title": DisplayMappingObjectSchema,
+								"subtitle": DisplayMappingObjectSchema,
+								"description": DisplayMappingObjectSchema,
+								"properties": {
+									type: "array",
+									format: "tabs-top",
+									items: {
+										type: "object",
+										properties: {
+											"label": { type: "string" },
+											"value": DisplayMappingObjectSchema,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+});
+manifestFormEditor.on("ready", () => {
+	dataRawEditor.value = JSON.stringify(VERIFIABLE_CREDENTIAL, null, "\t");
+	manifestFormEditor.setValue(CREDENTIAL_MANIFEST);
+	update();
+});
+manifestFormEditor.on("change", () => {
+	update();
+});
+
+let manifestRawEditor = document.querySelector("#manifest > textarea");
+manifestRawEditor.addEventListener("input", () => {
+	try {
+		manifestFormEditor.setValue(JSON.parse(manifestRawEditor.value));
+	} catch { }
+});
+
+let previewElement = null;
+function update() {
+	previewElement?.remove();
+	previewElement = new VerifiableCredential;
+	try {
+		previewElement.data = JSON.parse(dataRawEditor.value);
+		previewElement.manifest = manifestFormEditor.getValue();
+	} catch { }
+	document.getElementById("preview").appendChild(previewElement);
+
+	if (document.activeElement !== manifestRawEditor)
+		manifestRawEditor.value = JSON.stringify(manifestFormEditor.getValue(), null, "\t");
+}
+
+for (let textarea of document.getElementsByTagName("textarea")) {
+	textarea.addEventListener("keydown", function(event) {
+		if (event.keyCode === 9 && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+			event.preventDefault();
+			let oldSelectionStart = textarea.selectionStart;
+			textarea.value = textarea.value.substring(0, textarea.selectionStart) + "\t" + textarea.value.substring(textarea.selectionEnd);
+			textarea.selectionEnd = oldSelectionStart + 1;
+		}
+	});
+}
+
+</script>

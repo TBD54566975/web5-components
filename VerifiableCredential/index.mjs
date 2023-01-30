@@ -16,7 +16,7 @@ const STYLE = `
 	padding: 1em;
 }
 
-.thumbnail {
+.descriptor .thumbnail {
 	position: absolute;
 	top: 1em;
 	left: 1em;
@@ -25,7 +25,7 @@ const STYLE = `
 	max-height: 32px;
 }
 
-.hero {
+.descriptor .hero {
 	position: absolute;
 	top: 0;
 	right: 0;
@@ -36,7 +36,7 @@ const STYLE = `
 	max-height: 100%;
 }
 
-.title {
+.descriptor .title {
 	position: relative;
 	z-index: 3;
 	margin: 0;
@@ -46,7 +46,7 @@ const STYLE = `
 	overflow: hidden;
 }
 
-.subtitle {
+.descriptor .subtitle {
 	position: relative;
 	z-index: 3;
 	margin: 0;
@@ -56,7 +56,7 @@ const STYLE = `
 	overflow: hidden;
 }
 
-.description {
+.descriptor .description {
 	position: relative;
 	z-index: 3;
 	margin: 0;
@@ -66,21 +66,21 @@ const STYLE = `
 	overflow: hidden;
 }
 
-.properties {
+.descriptor .properties {
 	position: relative;
 	z-index: 3;
 	margin: 0;
 	padding: 0.5em 0 0;
 }
 
-.property {
+.descriptor .properties .property {
 	list-style-type: none;
 	white-space: nowrap;
 	text-overflow: ellipsis;
 	overflow: hidden;
 }
 
-.property::before {
+.descriptor .properties .property::before {
 	margin: 0 0.3em 0 0.5em;
 	content: "\\2022";
 }

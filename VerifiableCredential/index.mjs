@@ -297,6 +297,10 @@ export class VerifiableCredential extends HTMLElement {
 				if (!property)
 					continue;
 
+				let value = this.#resolveDisplayMappingObject(property);
+				if (!value)
+					continue;
+
 				let propertyElement = propertiesElement.appendChild(document.createElement("li"));
 				propertyElement.classList.add("property");
 
@@ -308,12 +312,9 @@ export class VerifiableCredential extends HTMLElement {
 					labelElement.textContent = label;
 				}
 
-				let value = this.#resolveDisplayMappingObject(property);
-				if (value) {
-					let valueElement = propertyElement.appendChild(document.createElement("span"));
-					valueElement.classList.add("value");
-					valueElement.textContent = value;
-				}
+				let valueElement = propertyElement.appendChild(document.createElement("span"));
+				valueElement.classList.add("value");
+				valueElement.textContent = value;
 			}
 		}
 	}

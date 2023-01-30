@@ -77,6 +77,7 @@ const STYLE = `
 	list-style-type: none;
 }
 
+.descriptor .description .label,
 .descriptor .properties .property .label {
 	display: block;
 	margin-bottom: 0.25em;
@@ -286,7 +287,12 @@ export class VerifiableCredential extends HTMLElement {
 			if (description) {
 				let descriptionElement = descriptorElement.appendChild(document.createElement("p"));
 				descriptionElement.classList.add("description");
-				descriptionElement.textContent = description;
+
+				let labelElement = descriptionElement.appendChild(document.createElement("span"));
+				labelElement.classList.add("label");
+				labelElement.textContent = "Description";
+
+				descriptionElement.append(" ", description);
 			}
 
 			let propertiesElement = descriptorElement.appendChild(document.createElement("ul"));

@@ -43,6 +43,7 @@ const STYLE = `
 	z-index: 3;
 	margin: 0;
 	padding: 0;
+	font-size: 1.5em;
 }
 
 .descriptor .subtitle {
@@ -50,6 +51,8 @@ const STYLE = `
 	z-index: 3;
 	margin: 0;
 	padding: 0;
+	font-size: 1em;
+	font-weight: normal;
 }
 
 .descriptor .description {

@@ -3,19 +3,16 @@ import JSONPath from "jsonpath";
 
 const VERSION = "https://identity.foundation/credential-manifest/spec/v1.0.0/";
 
+const STYLE_SPACING = "1.5em";
 const STYLE = `
-:host {
-	--spacing: 1.5em;
-}
-
 :host > :not(:first-child) {
-	padding-top: calc(var(--spacing) / 2);
+	padding-top: calc(${STYLE_SPACING} / 2);
 	border-top-right-radius: 0;
 	border-top-left-radius: 0;
 }
 
 :host > :not(:last-child) {
-	padding-bottom: calc(var(--spacing) / 2);
+	padding-bottom: calc(${STYLE_SPACING} / 2);
 	border-bottom-right-radius: 0;
 	border-bottom-left-radius: 0;
 }
@@ -23,10 +20,7 @@ const STYLE = `
 .issuer {
 	box-sizing: border-box;
 	position: relative;
-	max-width: min(100%, calc(var(--hero-width, 100%) * 1px));
-	max-height: min(100%, calc(var(--hero-height, 100%) * 1px));
-	aspect-ratio: var(--hero-width) / var(--hero-height);
-	padding: var(--spacing);
+	padding: ${STYLE_SPACING};
 	border-radius: inherit;
 }
 
@@ -36,10 +30,7 @@ const STYLE = `
 	flex-direction: column;
 	justify-content: flex-end;
 	position: relative;
-	max-width: min(100%, calc(var(--hero-width, 100%) * 1px));
-	max-height: min(100%, calc(var(--hero-height, 100%) * 1px));
-	aspect-ratio: var(--hero-width) / var(--hero-height);
-	padding: var(--spacing);
+	padding: ${STYLE_SPACING};
 	border-radius: inherit;
 }
 
@@ -93,24 +84,24 @@ const STYLE = `
 }
 
 .descriptor .description:not(:first-child) {
-	padding-top: var(--spacing);
+	padding-top: ${STYLE_SPACING};
 }
 
 .descriptor .properties {
 	display: flex;
 	flex-wrap: wrap;
-	gap: var(--spacing);
+	gap: ${STYLE_SPACING};
 	z-index: 3;
 	margin: 0;
 	padding: 0;
 }
 
 .descriptor .properties:not(:first-child) {
-	padding-top: var(--spacing);
+	padding-top: ${STYLE_SPACING};
 }
 
 .descriptor .properties .property {
-	width: calc(50% - (var(--spacing) / 2));
+	width: calc(50% - (${STYLE_SPACING} / 2));
 	list-style-type: none;
 }
 
@@ -363,8 +354,9 @@ export class VerifiableCredential extends HTMLElement {
 
 			event.target.hidden = false;
 
-			containerElement.style.setProperty("--hero-width", width);
-			containerElement.style.setProperty("--hero-height", height);
+			containerElement.style.setProperty("max-width", `min(100%, ${width}px)`);
+			containerElement.style.setProperty("max-height", `min(100%, ${height}px)`);
+			containerElement.style.setProperty("aspect-ratio", `${width} / ${height}`);
 		}
 
 		function handleImageError(event) {

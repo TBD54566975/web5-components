@@ -308,7 +308,10 @@ export class VerifiableCredential extends HTMLElement {
 
 				let labelElement = descriptionElement.appendChild(document.createElement("span"));
 				labelElement.classList.add("label");
-				labelElement.textContent = "Description";
+
+				let labelSlotElement = labelElement.appendChild(document.createElement("slot"));
+				labelSlotElement.name = "description-label";
+				labelSlotElement.textContent = "Description";
 
 				descriptionElement.append(" ", description);
 			}

@@ -22,6 +22,8 @@ The `"thumbnail"` of the [credential manifest](https://identity.foundation/crede
 
 The `"title"`, `"subtitle"`, `"description"`, and `"properties"` are rendered in the bottom left corner of the section (if provided).
 
+The "Description" label can be customized using a `<* slot="description-label">text goes here</*>` inside the `<verifiable-credential>`.  Note that only the `textContent` will be used, not any matching/applied styles.
+
 ## Style
 
 Any default inheritable properties (e.g. `font`, `border-radius`, etc.) will be inherited from the parent of the `<verifiable-credential>` (though sequential sections will not have `border-radius` applied in between) unless overridden by a value in the [credential manifest](https://identity.foundation/credential-manifest/) (e.g. `"text"`, `"background",` etc.).

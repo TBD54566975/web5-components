@@ -5,13 +5,13 @@ const VERSION = "https://identity.foundation/credential-manifest/spec/v1.0.0/";
 
 const STYLE_SPACING = "1.5em";
 const STYLE = `
-:host > :not(:first-child) {
+:host > :not(:first-of-type) {
 	padding-top: calc(${STYLE_SPACING} / 2);
 	border-top-right-radius: 0;
 	border-top-left-radius: 0;
 }
 
-:host > :not(:last-child) {
+:host > :not(:last-of-type) {
 	padding-bottom: calc(${STYLE_SPACING} / 2);
 	border-bottom-right-radius: 0;
 	border-bottom-left-radius: 0;
@@ -112,6 +112,10 @@ const STYLE = `
 	font-size: 0.5em;
 	text-transform: uppercase;
 	opacity: 0.5;
+}
+
+slot {
+	display: none;
 }
 `;
 
@@ -248,6 +252,31 @@ export class VerifiableCredential extends HTMLElement {
 		if (this.#manifest["spec_version"] !== VERSION)
 			return;
 
+		// Copy only the raw text of the `<* slot="description-label">` to ensure that no outside CSS leaks in.
+		let descriptionLabelElements = [ ];
+		function updateDescriptionLabels() {
+			let descriptionLabel = descriptionLabelSlotElement.assignedNodes().map((slottedNode) => slottedNode.textContent).join("") || "Description";
+			for (let descriptionLabelElement of descriptionLabelElements)
+				descriptionLabelElement.textContent = descriptionLabel;
+		}
+		let descriptionLabelSlotMutationObserver = new MutationObserver((records) => {
+			updateDescriptionLabels();
+		});
+		let descriptionLabelSlotElement = this.#root.appendChild(document.createElement("slot"));
+		descriptionLabelSlotElement.name = "description-label";
+		descriptionLabelSlotElement.addEventListener("slotchange", (event) => {
+			updateDescriptionLabels();
+
+			descriptionLabelSlotMutationObserver.disconnect();
+			for (let slottedNode of descriptionLabelSlotElement.assignedNodes()) {
+				descriptionLabelSlotMutationObserver.observe(slottedNode, {
+					subtree: true,
+					childList: true,
+					characterData: true,
+				});
+			}
+		});
+
 		// <https://identity.foundation/credential-manifest/#general-composition>
 
 		let issuer = verifyType(this.#manifest["issuer"], "object");
@@ -299,10 +328,7 @@ export class VerifiableCredential extends HTMLElement {
 
 				let labelElement = descriptionElement.appendChild(document.createElement("span"));
 				labelElement.classList.add("label");
-
-				let labelSlotElement = labelElement.appendChild(document.createElement("slot"));
-				labelSlotElement.name = "description-label";
-				labelSlotElement.textContent = "Description";
+				descriptionLabelElements.push(labelElement);
 
 				descriptionElement.append(" ", description);
 			}
@@ -337,6 +363,8 @@ export class VerifiableCredential extends HTMLElement {
 				valueElement.textContent = value;
 			}
 		}
+
+		updateDescriptionLabels();
 	}
 
 	// <https://identity.foundation/wallet-rendering/#entity-styles>

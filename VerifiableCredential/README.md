@@ -2,6 +2,8 @@
 
 A basic `<verifiable-credential>` custom element that renders a [verifiable credential](https://www.w3.org/TR/vc-data-model/) given a [credential manifest](https://identity.foundation/credential-manifest/).
 
+Playground: <[https://tbd54566975.github.io/web5-components/demo/VerifiableCredential/](https://tbd54566975.github.io/web5-components/demo/VerifiableCredential/)>
+
 ## HTML Attributes
 
 - `src` is a URL to the [verifiable credential](https://www.w3.org/TR/vc-data-model/)

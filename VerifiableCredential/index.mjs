@@ -156,11 +156,18 @@ export class VerifiableCredential extends HTMLElement {
 
 		this.#root = this.attachShadow({ mode: "closed" });
 
-		if (!VerifiableCredential.#style) {
-			VerifiableCredential.#style = new CSSStyleSheet;
-			VerifiableCredential.#style.replaceSync(STYLE);
+		if (this.#root.adoptedStyleSheets) {
+			if (!VerifiableCredential.#style) {
+				VerifiableCredential.#style = new CSSStyleSheet;
+				VerifiableCredential.#style.replaceSync(STYLE);
+			}
+			this.#root.adoptedStyleSheets = [ VerifiableCredential.#style ];
+		} else {
+			if (!VerifiableCredential.#style) {
+				VerifiableCredential.#style = document.createElement("style");
+				VerifiableCredential.#style.textContent = STYLE;
+			}
 		}
-		this.#root.adoptedStyleSheets = [ VerifiableCredential.#style ];
 	}
 
 	get src() {
@@ -241,6 +248,9 @@ export class VerifiableCredential extends HTMLElement {
 
 	#update() {
 		this.#root.textContent = ""; // remove all children
+
+		if (!this.#root.adoptedStyleSheets)
+			this.#root.appendChild(VerifiableCredential.#style.cloneNode(true));
 
 		if (!this.#data || typeof this.#data !== "object")
 			return;

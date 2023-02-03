@@ -17,7 +17,7 @@ You can then use any of the files in the `dist` folder to experiment.
 
 start any webserver of your choice (e.g. `python3 -m http.server <port>`) and navigate to `localhost:<port>/demo/` in any web browser
 
-the most recent commit can be previewed at `https://tbd54566975.github.io/web5-components/demo/<component>/` where the `<component>` is any of the top-level folders (e.g. `VerifiableCredential`)
+the most recent commit can be previewed at `https://tbd54566975.github.io/web5-components/demo/<component>/` where the `<component>` is any of the top-level folders (e.g. `VerifiableCredential` such as <a href="https://tbd54566975.github.io/web5-components/demo/VerifiableCredential/">here</a>)
 
 ## Project Resources
 

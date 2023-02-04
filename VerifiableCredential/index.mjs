@@ -1,10 +1,16 @@
 import AJV from "ajv";
 import JSONPath from "jsonpath";
+import QRCode from "qrcode";
 
 const VERSION = "https://identity.foundation/credential-manifest/spec/v1.0.0/";
 
 const STYLE_SPACING = "1.5em";
 const STYLE = `
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
 :host > :not(:first-of-type) {
 	padding-top: calc(${STYLE_SPACING} / 2);
 	border-top-right-radius: 0;
@@ -114,6 +120,10 @@ const STYLE = `
 	opacity: 0.5;
 }
 
+.qr {
+	margin-top: ${STYLE_SPACING};
+}
+
 slot {
 	display: none;
 }
@@ -138,6 +148,12 @@ function verifyType(value, typeOrValidator) {
 
 function isHexColor(value) {
 	return /^#[0-9A-F]{6}$/i.test(value);
+}
+
+function convertBooleanAttribute(value) {
+	if (value === "")
+		return true;
+	return !!value;
 }
 
 export class VerifiableCredential extends HTMLElement {
@@ -211,7 +227,18 @@ export class VerifiableCredential extends HTMLElement {
 		this.#update();
 	}
 
-	static observedAttributes = [ "src", "manifest" ];
+	get showQR() {
+		return this.hasAttribute("show-qr");
+	}
+	set showQR(showQR) {
+		this.toggleAttribute("show-qr", !!showQR);
+	}
+
+	static observedAttributes = [
+		"src",
+		"manifest",
+		"show-qr",
+	];
 	attributeChangedCallback(name, oldValue, newValue) {
 		switch (name) {
 		case "src":
@@ -242,6 +269,11 @@ export class VerifiableCredential extends HTMLElement {
 					if (error.name !== "AbortError")
 						throw error; // surface `fetch` errors for developers
 				});
+			return;
+
+		case "show-qr":
+			if (convertBooleanAttribute(oldValue) !== convertBooleanAttribute(newValue))
+				this.#update();
 			return;
 		}
 	}
@@ -372,6 +404,26 @@ export class VerifiableCredential extends HTMLElement {
 				valueElement.classList.add("value");
 				valueElement.textContent = value;
 			}
+		}
+
+		if (this.hasAttribute("show-qr")) {
+			let qrElement = this.#root.lastElementChild.appendChild(document.createElement("img"));
+			qrElement.classList.add("qr");
+			qrElement.hidden = true;
+			qrElement.addEventListener("load", (event) => {
+				qrElement.hidden = false;
+			});
+			qrElement.addEventListener("error", (event) => {
+				qrElement.remove();
+			});
+			QRCode.toDataURL(JSON.stringify(this.#data), (error, url) => {
+				if (error) {
+					qrElement.remove();
+					return;
+				}
+
+				qrElement.src = url;
+			});
 		}
 
 		updateDescriptionLabels();

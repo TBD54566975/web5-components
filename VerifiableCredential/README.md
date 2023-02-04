@@ -8,11 +8,13 @@ Playground: <[https://tbd54566975.github.io/web5-components/demo/VerifiableCrede
 
 - `src` is a URL to the [verifiable credential](https://www.w3.org/TR/vc-data-model/)
 - `manifest` is a URL to the [credential manifest](https://identity.foundation/credential-manifest/)
+- `show-qr` is a boolean that shows a QR Code containing a JSON payload of the [verifiable credential](https://www.w3.org/TR/vc-data-model/)
 
 ## JS Properties
 
 - `data` is a JSON payload of the [verifiable credential](https://www.w3.org/TR/vc-data-model/)
 - `manifest` is the JSON payload of the [credential manifest](https://identity.foundation/credential-manifest/)
+- `showQR` toggles the `show-qr` attribute
 
 ## Layout
 
@@ -25,6 +27,8 @@ The `"thumbnail"` of the [credential manifest](https://identity.foundation/crede
 The `"title"`, `"subtitle"`, `"description"`, and `"properties"` are rendered in the bottom left corner of the section (if provided).
 
 The "Description" label can be customized using a `<* slot="description-label">text goes here</*>` inside the `<verifiable-credential>`.  Note that only the `textContent` will be used, not any matching/applied styles.
+
+The QR code is added to the bottom of the last section.
 
 ## Style
 

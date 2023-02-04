@@ -281,6 +281,7 @@ let previewElement = null;
 function update() {
 	previewElement?.remove();
 	previewElement = new VerifiableCredential;
+	previewElement.showQR = true;
 	try {
 		previewElement.data = JSON.parse(dataRawEditor.value);
 		previewElement.manifest = manifestFormEditor.getValue();

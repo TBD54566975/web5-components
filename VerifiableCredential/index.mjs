@@ -156,6 +156,18 @@ function convertBooleanAttribute(value) {
 	return !!value;
 }
 
+function hideUntilLoad(element, callback) {
+	element.hidden = true;
+	element.addEventListener("load", (event) => {
+		callback?.();
+
+		element.hidden = false;
+	});
+	element.addEventListener("error", (event) => {
+		element.remove();
+	});
+}
+
 export class VerifiableCredential extends HTMLElement {
 	static #style = null;
 
@@ -409,13 +421,8 @@ export class VerifiableCredential extends HTMLElement {
 		if (this.hasAttribute("show-qr")) {
 			let qrElement = this.#root.lastElementChild.appendChild(document.createElement("img"));
 			qrElement.classList.add("qr");
-			qrElement.hidden = true;
-			qrElement.addEventListener("load", (event) => {
-				qrElement.hidden = false;
-			});
-			qrElement.addEventListener("error", (event) => {
-				qrElement.remove();
-			});
+			hideUntilLoad(qrElement);
+
 			QRCode.toDataURL(JSON.stringify(this.#data), (error, url) => {
 				if (error) {
 					qrElement.remove();
@@ -434,25 +441,6 @@ export class VerifiableCredential extends HTMLElement {
 		if (!data)
 			return;
 
-		function handleThumbnailLoad(event) {
-			event.target.hidden = false;
-		}
-
-		function handleHeroLoad(event) {
-			let width = event.target.naturalWidth;
-			let height = event.target.naturalHeight;
-
-			event.target.hidden = false;
-
-			containerElement.style.setProperty("max-width", `min(100%, ${width}px)`);
-			containerElement.style.setProperty("max-height", `min(100%, ${height}px)`);
-			containerElement.style.setProperty("aspect-ratio", `${width} / ${height}`);
-		}
-
-		function handleImageError(event) {
-			event.target.remove();
-		}
-
 		let textColor = verifyType(data["text"]?.["color"], isHexColor);
 		if (textColor)
 			containerElement.style.setProperty("color", textColor);
@@ -466,9 +454,7 @@ export class VerifiableCredential extends HTMLElement {
 			let thumbnailElement = containerElement.appendChild(document.createElement("img"));
 			thumbnailElement.classList.add("thumbnail");
 			thumbnailElement.src = thumbnailURI;
-			thumbnailElement.hidden = true;
-			thumbnailElement.addEventListener("load", handleThumbnailLoad);
-			thumbnailElement.addEventListener("error", handleImageError);
+			hideUntilLoad(thumbnailElement);
 
 			let thumbnailAlt = verifyType(data["thumbnail"]?.["alt"], "string");
 			if (thumbnailAlt)
@@ -480,9 +466,11 @@ export class VerifiableCredential extends HTMLElement {
 			let heroElement = containerElement.appendChild(document.createElement("img"));
 			heroElement.classList.add("hero");
 			heroElement.src = heroURI;
-			heroElement.hidden = true;
-			heroElement.addEventListener("load", handleHeroLoad);
-			heroElement.addEventListener("error", handleImageError);
+			hideUntilLoad(heroElement, () => {
+				containerElement.style.setProperty("max-width", `min(100%, ${heroElement.naturalWidth}px)`);
+				containerElement.style.setProperty("max-height", `min(100%, ${heroElement.naturalHeight}px)`);
+				containerElement.style.setProperty("aspect-ratio", `${heroElement.naturalWidth} / ${heroElement.naturalHeight}`);
+			});
 
 			let heroAlt = verifyType(data["hero"]?.["alt"], "string");
 			if (heroAlt)

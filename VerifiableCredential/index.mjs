@@ -1,6 +1,9 @@
-import AJV from "ajv";
-import JSONPath from "jsonpath";
 import QRCode from "qrcode";
+import { isHexColor } from "../shared/Color.mjs";
+import { convertBooleanAttribute, hideUntilLoad } from "../shared/DOM.mjs";
+import { verifyType } from "../shared/Type.mjs";
+import { isURL } from "../shared/URL.mjs";
+import { resolveDisplayMappingObject } from "../shared/WalletRendering.mjs";
 
 const VERSION = "https://identity.foundation/credential-manifest/spec/v1.0.0/";
 
@@ -128,45 +131,6 @@ slot {
 	display: none;
 }
 `;
-
-function isURL(string) {
-	try {
-		new URL(string);
-	} catch {
-		return false;
-	}
-	return true;
-}
-
-function verifyType(value, typeOrValidator) {
-	if (typeof typeOrValidator === "string" && typeof value !== typeOrValidator)
-		return undefined;
-	if (typeof typeOrValidator === "function" && !typeOrValidator(value))
-		return undefined;
-	return value;
-}
-
-function isHexColor(value) {
-	return /^#[0-9A-F]{6}$/i.test(value);
-}
-
-function convertBooleanAttribute(value) {
-	if (value === "")
-		return true;
-	return !!value;
-}
-
-function hideUntilLoad(element, callback) {
-	element.hidden = true;
-	element.addEventListener("load", (event) => {
-		callback?.();
-
-		element.hidden = false;
-	});
-	element.addEventListener("error", (event) => {
-		element.remove();
-	});
-}
 
 export class VerifiableCredential extends HTMLElement {
 	static #style = null;
@@ -361,21 +325,21 @@ export class VerifiableCredential extends HTMLElement {
 
 			// <https://identity.foundation/wallet-rendering/#data-display>
 
-			let title = this.#resolveDisplayMappingObject(descriptor["display"]?.["title"]);
+			let title = resolveDisplayMappingObject(descriptor["display"]?.["title"], this.#data);
 			if (title) {
 				let titleElement = descriptorElement.appendChild(document.createElement("h1"));
 				titleElement.classList.add("title");
 				titleElement.textContent = title;
 			}
 
-			let subtitle = this.#resolveDisplayMappingObject(descriptor["display"]?.["subtitle"]);
+			let subtitle = resolveDisplayMappingObject(descriptor["display"]?.["subtitle"], this.#data);
 			if (subtitle) {
 				let subtitleElement = descriptorElement.appendChild(document.createElement("h2"));
 				subtitleElement.classList.add("subtitle");
 				subtitleElement.textContent = subtitle;
 			}
 
-			let description = this.#resolveDisplayMappingObject(descriptor["display"]?.["description"]);
+			let description = resolveDisplayMappingObject(descriptor["display"]?.["description"], this.#data);
 			if (description) {
 				let descriptionElement = descriptorElement.appendChild(document.createElement("p"));
 				descriptionElement.classList.add("description");
@@ -395,7 +359,7 @@ export class VerifiableCredential extends HTMLElement {
 				if (!property)
 					continue;
 
-				let value = this.#resolveDisplayMappingObject(property);
+				let value = resolveDisplayMappingObject(property, this.#data);
 				if (!value)
 					continue;
 
@@ -476,57 +440,6 @@ export class VerifiableCredential extends HTMLElement {
 			if (heroAlt)
 				heroElement.alt = heroAlt;
 		}
-	}
-
-	// <https://identity.foundation/wallet-rendering/#display-mapping-object>
-	#resolveDisplayMappingObject(descriptor) {
-		// <https://identity.foundation/wallet-rendering/#using-text>
-		if ("text" in descriptor)
-			return verifyType(descriptor["text"], "string");
-
-		// <https://identity.foundation/wallet-rendering/#using-path>
-		if ("path" in descriptor) {
-			let fallback = verifyType(descriptor["fallback"], "string");
-
-			let path = verifyType(descriptor["path"], Array.isArray);
-			if (path === undefined)
-				return fallback;
-
-			let value = this.#getFirstValueMatchingPaths(path);
-			if (value === undefined)
-				return fallback;
-
-			let schema = descriptor["schema"];
-			try {
-				if (!(new AJV).validate(schema, value))
-					return fallback;
-			} catch {
-				return fallback;
-			}
-
-			return this.#formatValue(value);
-		}
-
-		return undefined;
-	}
-
-	#getFirstValueMatchingPaths(paths) {
-		for (let path of paths) {
-			let values = JSONPath.query(this.#data, path, 1);
-			if (values.length > 0)
-				return values[0];
-		}
-		return undefined;
-	}
-
-	#formatValue(value) {
-		if (value === true)
-			return "Yes";
-
-		if (value === false)
-			return "No";
-
-		return value;
 	}
 }
 customElements.define("verifiable-credential", VerifiableCredential);

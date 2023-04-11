@@ -59,6 +59,9 @@ export function prettifyValue(value) {
 
 // <https://identity.foundation/wallet-rendering/#display-mapping-object>
 export function resolveDisplayMappingObject(displayMappingObject, data) {
+	if (!displayMappingObject)
+		return undefined;
+
 	// <https://identity.foundation/wallet-rendering/#using-path>
 	if ("path" in displayMappingObject) {
 		let fallback = verifyType(displayMappingObject["fallback"], "string");

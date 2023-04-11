@@ -1,9 +1,7 @@
 import QRCode from "qrcode";
-import { isHexColor } from "../shared/Color.mjs";
 import { convertBooleanAttribute, hideUntilLoad } from "../shared/DOM.mjs";
 import { verifyType } from "../shared/Type.mjs";
-import { isURL } from "../shared/URL.mjs";
-import { resolveDisplayMappingObject } from "../shared/WalletRendering.mjs";
+import { applyEntityStyles, resolveDisplayMappingObject } from "../shared/WalletRendering.mjs";
 
 const VERSION = "https://identity.foundation/credential-manifest/spec/v1.0.0/";
 
@@ -302,7 +300,7 @@ export class VerifiableCredential extends HTMLElement {
 			let issuerElement = this.#root.appendChild(document.createElement("section"));
 			issuerElement.classList.add("issuer");
 
-			this.#applyEntityStyles(issuer["styles"], issuerElement);
+			applyEntityStyles(issuer["styles"], issuerElement);
 
 			let name = verifyType(issuer["name"], "string");
 			if (name) {
@@ -321,7 +319,7 @@ export class VerifiableCredential extends HTMLElement {
 			let descriptorElement = this.#root.appendChild(document.createElement("section"));
 			descriptorElement.classList.add("descriptor");
 
-			this.#applyEntityStyles(descriptor["styles"], descriptorElement);
+			applyEntityStyles(descriptor["styles"], descriptorElement);
 
 			// <https://identity.foundation/wallet-rendering/#data-display>
 
@@ -398,48 +396,6 @@ export class VerifiableCredential extends HTMLElement {
 		}
 
 		updateDescriptionLabels();
-	}
-
-	// <https://identity.foundation/wallet-rendering/#entity-styles>
-	#applyEntityStyles(data, containerElement) {
-		if (!data)
-			return;
-
-		let textColor = verifyType(data["text"]?.["color"], isHexColor);
-		if (textColor)
-			containerElement.style.setProperty("color", textColor);
-
-		let backgroundColor = verifyType(data["background"]?.["color"], isHexColor);
-		if (backgroundColor)
-			containerElement.style.setProperty("background-color", backgroundColor);
-
-		let thumbnailURI = verifyType(data["thumbnail"]?.["uri"], "string");
-		if (isURL(thumbnailURI)) {
-			let thumbnailElement = containerElement.appendChild(document.createElement("img"));
-			thumbnailElement.classList.add("thumbnail");
-			thumbnailElement.src = thumbnailURI;
-			hideUntilLoad(thumbnailElement);
-
-			let thumbnailAlt = verifyType(data["thumbnail"]?.["alt"], "string");
-			if (thumbnailAlt)
-				thumbnailElement.alt = thumbnailAlt;
-		}
-
-		let heroURI = verifyType(data["hero"]?.["uri"], "string");
-		if (isURL(heroURI)) {
-			let heroElement = containerElement.appendChild(document.createElement("img"));
-			heroElement.classList.add("hero");
-			heroElement.src = heroURI;
-			hideUntilLoad(heroElement, () => {
-				containerElement.style.setProperty("max-width", `min(100%, ${heroElement.naturalWidth}px)`);
-				containerElement.style.setProperty("max-height", `min(100%, ${heroElement.naturalHeight}px)`);
-				containerElement.style.setProperty("aspect-ratio", `${heroElement.naturalWidth} / ${heroElement.naturalHeight}`);
-			});
-
-			let heroAlt = verifyType(data["hero"]?.["alt"], "string");
-			if (heroAlt)
-				heroElement.alt = heroAlt;
-		}
 	}
 }
 customElements.define("verifiable-credential", VerifiableCredential);

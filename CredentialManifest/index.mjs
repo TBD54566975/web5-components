@@ -1,7 +1,5 @@
-import QRCode from "qrcode";
-import { convertBooleanAttribute, hideUntilLoad } from "../shared/DOM.mjs";
+import { hideUntilLoad } from "../shared/DOM.mjs";
 import { verifyType } from "../shared/Type.mjs";
-import { resolveDisplayMappingObject } from "../shared/WalletRendering/DisplayMappingObject.mjs";
 import { applyEntityStyles } from "../shared/WalletRendering/EntityStyles.mjs";
 
 const VERSION = "https://identity.foundation/credential-manifest/spec/v1.0.0/";
@@ -122,8 +120,9 @@ img {
 	opacity: 0.5;
 }
 
-.qr {
-	margin-top: ${STYLE_SPACING};
+.placeholder {
+	font-style: italic;
+	opacity: 0.5;
 }
 
 slot {
@@ -131,14 +130,11 @@ slot {
 }
 `;
 
-export class VerifiableCredential extends HTMLElement {
+export class CredentialManifest extends HTMLElement {
 	static #style = null;
 
 	#data = null;
 	#srcFetchAbortController = null;
-
-	#manifest = null;
-	#manifestFetchAbortController = null;
 
 	#root;
 
@@ -148,15 +144,15 @@ export class VerifiableCredential extends HTMLElement {
 		this.#root = this.attachShadow({ mode: "closed" });
 
 		if (this.#root.adoptedStyleSheets) {
-			if (!VerifiableCredential.#style) {
-				VerifiableCredential.#style = new CSSStyleSheet;
-				VerifiableCredential.#style.replaceSync(STYLE);
+			if (!CredentialManifest.#style) {
+				CredentialManifest.#style = new CSSStyleSheet;
+				CredentialManifest.#style.replaceSync(STYLE);
 			}
-			this.#root.adoptedStyleSheets = [ VerifiableCredential.#style ];
+			this.#root.adoptedStyleSheets = [ CredentialManifest.#style ];
 		} else {
-			if (!VerifiableCredential.#style) {
-				VerifiableCredential.#style = document.createElement("style");
-				VerifiableCredential.#style.textContent = STYLE;
+			if (!CredentialManifest.#style) {
+				CredentialManifest.#style = document.createElement("style");
+				CredentialManifest.#style.textContent = STYLE;
 			}
 		}
 	}
@@ -183,36 +179,8 @@ export class VerifiableCredential extends HTMLElement {
 		this.#update();
 	}
 
-	get manifest() { return this.#manifest; }
-	set manifest(manifest) {
-		if (typeof manifest === "string") {
-			this.setAttribute("manifest", manifest);
-			return;
-		}
-
-		if (!manifest || typeof manifest !== "object")
-			return;
-
-		if (this.#manifestFetchAbortController) {
-			this.#manifestFetchAbortController.abort();
-			this.#manifestFetchAbortController = null;
-		}
-
-		this.#manifest = manifest;
-		this.#update();
-	}
-
-	get showQR() {
-		return this.hasAttribute("show-qr");
-	}
-	set showQR(showQR) {
-		this.toggleAttribute("show-qr", !!showQR);
-	}
-
 	static observedAttributes = [
 		"src",
-		"manifest",
-		"show-qr",
 	];
 	attributeChangedCallback(name, oldValue, newValue) {
 		switch (name) {
@@ -230,26 +198,6 @@ export class VerifiableCredential extends HTMLElement {
 						throw error; // surface `fetch` errors for developers
 				});
 			return;
-
-		case "manifest":
-			this.#manifestFetchAbortController?.abort();
-			this.#manifestFetchAbortController = new AbortController;
-
-			fetch(newValue, { signal: this.#manifestFetchAbortController.signal })
-				.then((response) => response.json())
-				.then((json) => {
-					this.manifest = json;
-				})
-				.catch((error) => {
-					if (error.name !== "AbortError")
-						throw error; // surface `fetch` errors for developers
-				});
-			return;
-
-		case "show-qr":
-			if (convertBooleanAttribute(oldValue) !== convertBooleanAttribute(newValue))
-				this.#update();
-			return;
 		}
 	}
 
@@ -257,16 +205,13 @@ export class VerifiableCredential extends HTMLElement {
 		this.#root.textContent = ""; // remove all children
 
 		if (!this.#root.adoptedStyleSheets)
-			this.#root.appendChild(VerifiableCredential.#style.cloneNode(true));
+			this.#root.appendChild(CredentialManifest.#style.cloneNode(true));
 
 		if (!this.#data || typeof this.#data !== "object")
 			return;
 
-		if (!this.#manifest || typeof this.#manifest !== "object")
-			return;
-
 		// <https://identity.foundation/credential-manifest/#versioning>
-		if (this.#manifest["spec_version"] !== VERSION)
+		if (this.#data["spec_version"] !== VERSION)
 			return;
 
 		// Copy only the raw text of the `<* slot="description-label">` to ensure that no outside CSS leaks in.
@@ -296,7 +241,7 @@ export class VerifiableCredential extends HTMLElement {
 
 		// <https://identity.foundation/credential-manifest/#general-composition>
 
-		let issuer = verifyType(this.#manifest["issuer"], "object");
+		let issuer = verifyType(this.#data["issuer"], "object");
 		if (issuer) {
 			let issuerElement = this.#root.appendChild(document.createElement("section"));
 			issuerElement.classList.add("issuer");
@@ -312,7 +257,7 @@ export class VerifiableCredential extends HTMLElement {
 		}
 
 		// <https://identity.foundation/credential-manifest/#output-descriptor>
-		let descriptors = verifyType(this.#manifest["output_descriptors"], Array.isArray) ?? [ ];
+		let descriptors = verifyType(this.#data["output_descriptors"], Array.isArray) ?? [ ];
 		for (let descriptor of descriptors) {
 			if (!descriptor)
 				continue;
@@ -324,21 +269,23 @@ export class VerifiableCredential extends HTMLElement {
 
 			// <https://identity.foundation/wallet-rendering/#data-display>
 
-			let title = resolveDisplayMappingObject(descriptor["display"]?.["title"], this.#data);
+			let title = this.#placeholderForDisplayMappingObject(descriptor["display"]?.["title"], "title");
 			if (title) {
 				let titleElement = descriptorElement.appendChild(document.createElement("h1"));
 				titleElement.classList.add("title");
-				titleElement.textContent = title;
+				titleElement.textContent = title.text;
+				titleElement.classList.add(...title.classes);
 			}
 
-			let subtitle = resolveDisplayMappingObject(descriptor["display"]?.["subtitle"], this.#data);
+			let subtitle = this.#placeholderForDisplayMappingObject(descriptor["display"]?.["subtitle"], "subtitle");
 			if (subtitle) {
 				let subtitleElement = descriptorElement.appendChild(document.createElement("h2"));
 				subtitleElement.classList.add("subtitle");
-				subtitleElement.textContent = subtitle;
+				subtitleElement.textContent = subtitle.text;
+				subtitleElement.classList.add(...subtitle.classes);
 			}
 
-			let description = resolveDisplayMappingObject(descriptor["display"]?.["description"], this.#data);
+			let description = this.#placeholderForDisplayMappingObject(descriptor["display"]?.["description"], "description");
 			if (description) {
 				let descriptionElement = descriptorElement.appendChild(document.createElement("p"));
 				descriptionElement.classList.add("description");
@@ -347,7 +294,11 @@ export class VerifiableCredential extends HTMLElement {
 				labelElement.classList.add("label");
 				descriptionLabelElements.push(labelElement);
 
-				descriptionElement.append(" ", description);
+				descriptionElement.append(" ");
+
+				let textElement = descriptionElement.appendChild(document.createElement("span"));
+				textElement.textContent = description.text;
+				textElement.classList.add(...description.classes);
 			}
 
 			let propertiesElement = descriptorElement.appendChild(document.createElement("ul"));
@@ -358,7 +309,7 @@ export class VerifiableCredential extends HTMLElement {
 				if (!property)
 					continue;
 
-				let value = resolveDisplayMappingObject(property, this.#data);
+				let value = this.#placeholderForDisplayMappingObject(property, "property");
 				if (!value)
 					continue;
 
@@ -377,26 +328,32 @@ export class VerifiableCredential extends HTMLElement {
 
 				let valueElement = propertyElement.appendChild(document.createElement("span"));
 				valueElement.classList.add("value");
-				valueElement.textContent = value;
+				valueElement.textContent = value.text;
+				valueElement.classList.add(...value.classes);
 			}
-		}
-
-		if (this.hasAttribute("show-qr")) {
-			let qrElement = this.#root.lastElementChild.appendChild(document.createElement("img"));
-			qrElement.classList.add("qr");
-			hideUntilLoad(qrElement);
-
-			QRCode.toDataURL(JSON.stringify(this.#data), (error, url) => {
-				if (error) {
-					qrElement.remove();
-					return;
-				}
-
-				qrElement.src = url;
-			});
 		}
 
 		updateDescriptionLabels();
 	}
+
+	// <https://identity.foundation/wallet-rendering/#display-mapping-object>
+	#placeholderForDisplayMappingObject(displayMappingObject, name) {
+		if (!displayMappingObject)
+			return undefined;
+
+		// <https://identity.foundation/wallet-rendering/#using-path>
+		if ("path" in displayMappingObject) {
+			let fallback = verifyType(displayMappingObject["fallback"], "string");
+			if (fallback)
+				return { text: fallback, classes: [ ] };
+			return { text: name, classes: [ "placeholder" ] };
+		}
+
+		// <https://identity.foundation/wallet-rendering/#using-text>
+		if ("text" in displayMappingObject)
+			return { text: verifyType(displayMappingObject["text"], "string"), classes: [ ] };
+
+		return undefined;
+	}
 }
-customElements.define("verifiable-credential", VerifiableCredential);
+customElements.define("credential-manifest", CredentialManifest);

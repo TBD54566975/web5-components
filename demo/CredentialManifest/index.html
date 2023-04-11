@@ -1,10 +1,6 @@
 <body>
 <main>
 	<section id="data">
-		<h3>Verifiable Credential</h3>
-		<textarea></textarea>
-	</section>
-	<section id="manifest">
 		<form></form>
 		<textarea></textarea>
 	</section>
@@ -125,7 +121,7 @@ textarea {
 	margin-bottom: 0.25em;
 }
 
-verifiable-credential {
+credential-manifest {
 	display: block;
 	max-width: 300px;
 	margin: 1em auto;
@@ -135,12 +131,7 @@ verifiable-credential {
 </style>
 <script type="module">
 import "../shared/jsoneditor.min.js";
-import { VerifiableCredential } from "../../dist/VerifiableCredential.mjs";
-
-let dataRawEditor = document.querySelector("#data > textarea");
-dataRawEditor.addEventListener("input", () => {
-	update();
-});
+import { CredentialManifest } from "../../dist/CredentialManifest.mjs";
 
 const EntityStylesObjectProperties = {
 	"thumbnail": {
@@ -197,7 +188,7 @@ const DisplayMappingObjectProperties = {
 	"text": { required: false, type: "string" },
 };
 
-let manifestFormEditor = new JSONEditor(document.querySelector("#manifest > form"), {
+let dataFormEditor = new JSONEditor(document.querySelector("#data > form"), {
 	disable_array_delete_all_rows: true,
 	disable_array_delete_last_row: true,
 	disable_array_reorder: true,
@@ -290,39 +281,33 @@ let manifestFormEditor = new JSONEditor(document.querySelector("#manifest > form
 		},
 	},
 });
-manifestFormEditor.on("ready", async () => {
-	let [ VERIFIABLE_CREDENTIAL, CREDENTIAL_MANIFEST ] = await Promise.all([
-		fetch("../shared/VerifiableCredential.json").then((response) => response.json()),
-		fetch("../shared/CredentialManifest.json").then((response) => response.json()),
-	]);
-	dataRawEditor.value = JSON.stringify(VERIFIABLE_CREDENTIAL, null, "\t");
-	manifestFormEditor.setValue(CREDENTIAL_MANIFEST);
+dataFormEditor.on("ready", async () => {
+	let CREDENTIAL_MANIFEST = await fetch("../shared/CredentialManifest.json").then((response) => response.json());
+	dataFormEditor.setValue(CREDENTIAL_MANIFEST);
 	update();
 });
-manifestFormEditor.on("change", () => {
+dataFormEditor.on("change", () => {
 	update();
 });
 
-let manifestRawEditor = document.querySelector("#manifest > textarea");
-manifestRawEditor.addEventListener("input", () => {
+let dataRawEditor = document.querySelector("#data > textarea");
+dataRawEditor.addEventListener("input", () => {
 	try {
-		manifestFormEditor.setValue(JSON.parse(manifestRawEditor.value));
+		dataFormEditor.setValue(JSON.parse(dataRawEditor.value));
 	} catch { }
 });
 
 let previewElement = null;
 function update() {
 	previewElement?.remove();
-	previewElement = new VerifiableCredential;
-	previewElement.showQR = true;
+	previewElement = new CredentialManifest;
 	try {
-		previewElement.data = JSON.parse(dataRawEditor.value);
-		previewElement.manifest = manifestFormEditor.getValue();
+		previewElement.data = dataFormEditor.getValue();
 	} catch { }
 	document.getElementById("preview").appendChild(previewElement);
 
-	if (document.activeElement !== manifestRawEditor)
-		manifestRawEditor.value = JSON.stringify(manifestFormEditor.getValue(), null, "\t");
+	if (document.activeElement !== dataRawEditor)
+		dataRawEditor.value = JSON.stringify(dataFormEditor.getValue(), null, "\t");
 }
 
 for (let textarea of document.getElementsByTagName("textarea")) {

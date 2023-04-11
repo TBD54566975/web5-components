@@ -1,19 +1,13 @@
 import AJV from "ajv";
-import { getFirstValueMatchingPaths } from "./JSON.mjs";
-import { verifyType } from "../shared/Type.mjs";
-
-export function prettifyValue(value) {
-	if (value === true)
-		return "Yes";
-
-	if (value === false)
-		return "No";
-
-	return value;
-}
+import { getFirstValueMatchingPaths } from "../../shared/JSONPath.mjs";
+import { prettifyValue } from "../../shared/String.mjs";
+import { verifyType } from "../../shared/Type.mjs";
 
 // <https://identity.foundation/wallet-rendering/#display-mapping-object>
 export function resolveDisplayMappingObject(displayMappingObject, data) {
+	if (!displayMappingObject)
+		return undefined;
+
 	// <https://identity.foundation/wallet-rendering/#using-path>
 	if ("path" in displayMappingObject) {
 		let fallback = verifyType(displayMappingObject["fallback"], "string");

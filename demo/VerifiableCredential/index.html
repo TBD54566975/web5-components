@@ -61,20 +61,21 @@ textarea {
 }
 
 /* remove redundant labels */
-.je-object__container:not([data-schemapath="root"]) > .je-object__title,
+.je-tabholder--clear > .je-object__container:not([data-schemapath="root"]) > .je-object__title,
+.je-tabholder--clear > .je-indented-panel > .row > .je-object__container:not([data-schemapath="root"]) > .je-object__title,
 [data-schemapath$=".properties"] > .je-header > label,
 [data-schemapath$=".path"] .je-form-input-label {
 	display: none;
 }
 
 /* remove unnecessary editors */
-.je-switcher,
-[data-schemapath$=".schema"] {
+.je-switcher {
 	display: none;
 }
 
 /* remove redundant borders */
-.je-object__container > .je-indented-panel {
+.je-tabholder--clear > .je-object__container > .je-indented-panel,
+.je-tabholder--clear > .je-indented-panel > .row > .je-object__container > .je-indented-panel {
 	margin: 0 !important;
 	padding: 0 !important;
 	border: none !important;
@@ -141,60 +142,59 @@ dataRawEditor.addEventListener("input", () => {
 	update();
 });
 
-const EntityStylesObjectSchema = {
-	type: "object",
-	format: "categories",
-	properties: {
-		"thumbnail": {
-			type: "object",
-			format: "grid",
-			properties: {
-				"uri": { type: "string" },
-				"alt": { type: "string" },
-			},
+const EntityStylesObjectProperties = {
+	"thumbnail": {
+		required: false,
+		type: "object",
+		format: "grid",
+		properties: {
+			"uri": { required: true, type: "string" },
+			"alt": { required: false, type: "string" },
 		},
-		"hero": {
-			type: "object",
-			format: "grid",
-			properties: {
-				"uri": { type: "string" },
-				"alt": { type: "string" },
-			},
+	},
+	"hero": {
+		required: false,
+		type: "object",
+		format: "grid",
+		properties: {
+			"uri": { required: true, type: "string" },
+			"alt": { required: false, type: "string" },
 		},
-		"background": {
-			type: "object",
-			format: "grid",
-			properties: {
-				"color": { type: "string" },
-			},
+	},
+	"background": {
+		required: false,
+		type: "object",
+		format: "grid",
+		properties: {
+			"color": { required: false, type: "string" },
 		},
-		"text": {
-			type: "object",
-			format: "grid",
-			properties: {
-				"color": { type: "string" },
-			},
+	},
+	"text": {
+		required: false,
+		type: "object",
+		format: "grid",
+		properties: {
+			"color": { required: false, type: "string" },
 		},
 	},
 };
 
-const DisplayMappingObjectSchema = {
-	type: "object",
-	properties: {
-		"path": {
-			type: "array",
-			items: { type: "string" },
-		},
-		"schema": {
-			type: "object",
-			properties: {
-				"type": { type: "string" },
-				"format": { type: "string" },
-			},
-		},
-		"fallback": { type: "string" },
-		"text": { type: "string" },
+const DisplayMappingObjectProperties = {
+	"path": {
+		required: false,
+		type: "array",
+		items: { type: "string" },
 	},
+	"schema": {
+		required: false,
+		type: "object",
+		properties: {
+			"type": { required: true, type: "string" },
+			"format": { required: false, type: "string" },
+		},
+	},
+	"fallback": { required: false, type: "string" },
+	"text": { required: false, type: "string" },
 };
 
 let manifestFormEditor = new JSONEditor(document.querySelector("#manifest > form"), {
@@ -204,25 +204,36 @@ let manifestFormEditor = new JSONEditor(document.querySelector("#manifest > form
 	disable_collapse: true,
 	disable_edit_json: true,
 	disable_properties: true,
+	no_additional_properties: true,
 	prompt_before_delete: false,
-	remove_empty_properties: true,
+	show_opt_in: true,
 	schema: {
 		title: "Credential Manifest",
 		type: "object",
 		format: "categories",
 		basicCategoryTitle: "Misc",
 		properties: {
+			"id": { required: true, type: "string" },
+			"name": { required: false, type: "string" },
+			"description": { required: false, type: "string" },
+			"spec_version": { required: true, type: "string" },
 			"issuer": {
+				required: true,
 				type: "object",
 				format: "categories",
 				basicCategoryTitle: "Misc",
 				properties: {
-					"id": { type: "string" },
-					"name": { type: "string" },
-					"styles": EntityStylesObjectSchema,
+					"id": { required: true, type: "string" },
+					"name": { required: false, type: "string" },
+					"styles": {
+						required: false,
+						type: "object",
+						properties: EntityStylesObjectProperties,
+					},
 				},
 			},
 			"output_descriptors": {
+				required: true,
 				type: "array",
 				format: "tabs-top",
 				items: {
@@ -230,22 +241,44 @@ let manifestFormEditor = new JSONEditor(document.querySelector("#manifest > form
 					format: "categories",
 					basicCategoryTitle: "Misc",
 					properties: {
-						"styles": EntityStylesObjectSchema,
+						"id": { required: true, type: "string" },
+						"schema": { required: true, type: "string" },
+						"name": { required: false, type: "string" },
+						"description": { required: false, type: "string" },
+						"styles": {
+							required: false,
+							type: "object",
+							properties: EntityStylesObjectProperties,
+						},
 						"display": {
+							required: false,
 							type: "object",
 							format: "categories",
 							properties: {
-								"title": DisplayMappingObjectSchema,
-								"subtitle": DisplayMappingObjectSchema,
-								"description": DisplayMappingObjectSchema,
+								"title": {
+									required: false,
+									type: "object",
+									properties: DisplayMappingObjectProperties,
+								},
+								"subtitle": {
+									required: false,
+									type: "object",
+									properties: DisplayMappingObjectProperties,
+								},
+								"description": {
+									required: false,
+									type: "object",
+									properties: DisplayMappingObjectProperties,
+								},
 								"properties": {
+									required: false,
 									type: "array",
 									format: "tabs-top",
 									items: {
 										type: "object",
 										properties: {
-											"label": { type: "string" },
-											"value": DisplayMappingObjectSchema,
+											...DisplayMappingObjectProperties,
+											"label": { required: true, type: "string" },
 										},
 									},
 								},

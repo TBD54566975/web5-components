@@ -134,7 +134,7 @@ verifiable-credential {
 }
 </style>
 <script type="module">
-import "../jsoneditor.min.js";
+import "../shared/jsoneditor.min.js";
 import { VerifiableCredential } from "../../dist/VerifiableCredential.mjs";
 
 let dataRawEditor = document.querySelector("#data > textarea");
@@ -292,8 +292,8 @@ let manifestFormEditor = new JSONEditor(document.querySelector("#manifest > form
 });
 manifestFormEditor.on("ready", async () => {
 	let [ VERIFIABLE_CREDENTIAL, CREDENTIAL_MANIFEST ] = await Promise.all([
-		fetch("../VerifiableCredential.json").then((response) => response.json()),
-		fetch("../CredentialManifest.json").then((response) => response.json()),
+		fetch("../shared/VerifiableCredential.json").then((response) => response.json()),
+		fetch("../shared/CredentialManifest.json").then((response) => response.json()),
 	]);
 	dataRawEditor.value = JSON.stringify(VERIFIABLE_CREDENTIAL, null, "\t");
 	manifestFormEditor.setValue(CREDENTIAL_MANIFEST);

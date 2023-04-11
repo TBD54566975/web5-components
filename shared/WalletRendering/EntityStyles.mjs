@@ -1,9 +1,7 @@
-import AJV from "ajv";
-import { getFirstValueMatchingPaths } from "./JSON.mjs";
-import { isHexColor } from "../shared/Color.mjs";
-import { hideUntilLoad } from "../shared/DOM.mjs";
-import { verifyType } from "../shared/Type.mjs";
-import { isURL } from "../shared/URL.mjs";
+import { isHexColor } from "../../shared/Color.mjs";
+import { hideUntilLoad } from "../../shared/DOM.mjs";
+import { verifyType } from "../../shared/Type.mjs";
+import { isURL } from "../../shared/URL.mjs";
 
 // <https://identity.foundation/wallet-rendering/#entity-styles>
 export function applyEntityStyles(entityStyles, containerElement) {
@@ -45,49 +43,4 @@ export function applyEntityStyles(entityStyles, containerElement) {
 		if (heroAlt)
 			heroElement.alt = heroAlt;
 	}
-}
-
-export function prettifyValue(value) {
-	if (value === true)
-		return "Yes";
-
-	if (value === false)
-		return "No";
-
-	return value;
-}
-
-// <https://identity.foundation/wallet-rendering/#display-mapping-object>
-export function resolveDisplayMappingObject(displayMappingObject, data) {
-	if (!displayMappingObject)
-		return undefined;
-
-	// <https://identity.foundation/wallet-rendering/#using-path>
-	if ("path" in displayMappingObject) {
-		let fallback = verifyType(displayMappingObject["fallback"], "string");
-
-		let path = verifyType(displayMappingObject["path"], Array.isArray);
-		if (path === undefined)
-			return fallback;
-
-		let value = getFirstValueMatchingPaths(data, path);
-		if (value === undefined)
-			return fallback;
-
-		let schema = displayMappingObject["schema"];
-		try {
-			if (!(new AJV).validate(schema, value))
-				return fallback;
-		} catch {
-			return fallback;
-		}
-
-		return prettifyValue(value);
-	}
-
-	// <https://identity.foundation/wallet-rendering/#using-text>
-	if ("text" in displayMappingObject)
-		return verifyType(displayMappingObject["text"], "string");
-
-	return undefined;
 }

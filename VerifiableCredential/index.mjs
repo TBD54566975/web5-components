@@ -1,7 +1,8 @@
 import QRCode from "qrcode";
 import { convertBooleanAttribute, hideUntilLoad } from "../shared/DOM.mjs";
 import { verifyType } from "../shared/Type.mjs";
-import { applyEntityStyles, resolveDisplayMappingObject } from "../shared/WalletRendering.mjs";
+import { resolveDisplayMappingObject } from "../shared/WalletRendering/DisplayMappingObject.mjs";
+import { applyEntityStyles } from "../shared/WalletRendering/EntityStyles.mjs";
 
 const VERSION = "https://identity.foundation/credential-manifest/spec/v1.0.0/";
 

@@ -1,0 +1,324 @@
+<body>
+<main>
+	<section id="data">
+		<form></form>
+		<textarea></textarea>
+	</section>
+	<section id="preview">
+		<h3>Preview</h3>
+	</section>
+</main>
+<style>
+body {
+	margin: 0;
+	font-family: sans-serif;
+}
+
+main {
+	box-sizing: border-box;
+	display: flex;
+	gap: 1em;
+	min-height: 100%;
+	padding: 1em;
+}
+
+main > section {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+}
+
+main > section > h3 {
+	margin: 0;
+}
+
+input[type="text"] {
+	min-width: 20em;
+	font-family: monospace;
+	color: hsl(0, 0%, 90%);
+	background-color: hsl(0, 0%, 10%);
+}
+
+textarea {
+	flex-grow: 1;
+	width: 100%;
+	min-height: 10em;
+	padding: 0.25em;
+	line-height: 1.5;
+	color: #f8f8f2;
+	background-color: #272822;
+	tab-size: 2;
+	resize: vertical;
+}
+
+/* remove unnecessary spacing */
+.je-header {
+	margin: 0;
+}
+
+/* remove redundant labels */
+.je-tabholder--clear > .je-object__container:not([data-schemapath="root"]) > .je-object__title,
+.je-tabholder--clear > .je-indented-panel > .row > .je-object__container:not([data-schemapath="root"]) > .je-object__title,
+[data-schemapath$=".properties"] > .je-header > label,
+[data-schemapath$=".path"] .je-form-input-label {
+	display: none;
+}
+
+/* remove unnecessary editors */
+.je-switcher {
+	display: none;
+}
+
+/* remove redundant borders */
+.je-tabholder--clear > .je-object__container > .je-indented-panel,
+.je-tabholder--clear > .je-indented-panel > .row > .je-object__container > .je-indented-panel {
+	margin: 0 !important;
+	padding: 0 !important;
+	border: none !important;
+}
+
+/* add spacing between inputs */
+[data-schematype] + [data-schematype],
+.row + .row {
+	margin-top: 0.25em;
+}
+
+/* render string inputs on the same line as the label */
+[data-schematype="string"] > .form-control {
+	display: flex;
+	gap: 0.25em;
+}
+
+/* render the delete button on the same line as the string input */
+[data-schematype="array"] [data-schematype="string"] {
+	display: flex;
+	gap: 0.1em;
+}
+
+/* remove redundant borders and spacing for path array */
+[data-schemapath$=".path"] [data-schematype="string"] {
+	margin: 0.25em 0;
+	padding: 0;
+	border: none;
+}
+
+/* move the add button to the end of the properties tab */
+[data-schemapath$=".properties"] {
+	display: flex;
+	flex-direction: column;
+}
+[data-schemapath$=".properties"] > .je-header {
+	order: 1;
+}
+
+/* remove unnecessary spacing before the add button in the properties tab */
+[data-schemapath$=".properties"] > .je-header > .je-header-button-holder {
+	margin-left: 0;
+}
+
+/* add spacing above delete button in properties tab */
+[data-schemapath$=".properties"] [data-schematype="object"] > .je-indented-panel {
+	margin-bottom: 0.25em;
+}
+
+credential-manifest {
+	display: block;
+	max-width: 300px;
+	margin: 1em auto;
+	border-radius: 1em;
+	box-shadow: 0 1px 5px hsl(0, 0%, 10%);
+}
+</style>
+<script type="module">
+import "../shared/jsoneditor.min.js";
+import { CredentialManifest } from "../../dist/CredentialManifest.mjs";
+
+const EntityStylesObjectProperties = {
+	"thumbnail": {
+		required: false,
+		type: "object",
+		format: "grid",
+		properties: {
+			"uri": { required: true, type: "string" },
+			"alt": { required: false, type: "string" },
+		},
+	},
+	"hero": {
+		required: false,
+		type: "object",
+		format: "grid",
+		properties: {
+			"uri": { required: true, type: "string" },
+			"alt": { required: false, type: "string" },
+		},
+	},
+	"background": {
+		required: false,
+		type: "object",
+		format: "grid",
+		properties: {
+			"color": { required: false, type: "string" },
+		},
+	},
+	"text": {
+		required: false,
+		type: "object",
+		format: "grid",
+		properties: {
+			"color": { required: false, type: "string" },
+		},
+	},
+};
+
+const DisplayMappingObjectProperties = {
+	"path": {
+		required: false,
+		type: "array",
+		items: { type: "string" },
+	},
+	"schema": {
+		required: false,
+		type: "object",
+		properties: {
+			"type": { required: true, type: "string" },
+			"format": { required: false, type: "string" },
+		},
+	},
+	"fallback": { required: false, type: "string" },
+	"text": { required: false, type: "string" },
+};
+
+let dataFormEditor = new JSONEditor(document.querySelector("#data > form"), {
+	disable_array_delete_all_rows: true,
+	disable_array_delete_last_row: true,
+	disable_array_reorder: true,
+	disable_collapse: true,
+	disable_edit_json: true,
+	disable_properties: true,
+	no_additional_properties: true,
+	prompt_before_delete: false,
+	show_opt_in: true,
+	schema: {
+		title: "Credential Manifest",
+		type: "object",
+		format: "categories",
+		basicCategoryTitle: "Misc",
+		properties: {
+			"id": { required: true, type: "string" },
+			"name": { required: false, type: "string" },
+			"description": { required: false, type: "string" },
+			"spec_version": { required: true, type: "string" },
+			"issuer": {
+				required: true,
+				type: "object",
+				format: "categories",
+				basicCategoryTitle: "Misc",
+				properties: {
+					"id": { required: true, type: "string" },
+					"name": { required: false, type: "string" },
+					"styles": {
+						required: false,
+						type: "object",
+						properties: EntityStylesObjectProperties,
+					},
+				},
+			},
+			"output_descriptors": {
+				required: true,
+				type: "array",
+				format: "tabs-top",
+				items: {
+					type: "object",
+					format: "categories",
+					basicCategoryTitle: "Misc",
+					properties: {
+						"id": { required: true, type: "string" },
+						"schema": { required: true, type: "string" },
+						"name": { required: false, type: "string" },
+						"description": { required: false, type: "string" },
+						"styles": {
+							required: false,
+							type: "object",
+							properties: EntityStylesObjectProperties,
+						},
+						"display": {
+							required: false,
+							type: "object",
+							format: "categories",
+							properties: {
+								"title": {
+									required: false,
+									type: "object",
+									properties: DisplayMappingObjectProperties,
+								},
+								"subtitle": {
+									required: false,
+									type: "object",
+									properties: DisplayMappingObjectProperties,
+								},
+								"description": {
+									required: false,
+									type: "object",
+									properties: DisplayMappingObjectProperties,
+								},
+								"properties": {
+									required: false,
+									type: "array",
+									format: "tabs-top",
+									items: {
+										type: "object",
+										properties: {
+											...DisplayMappingObjectProperties,
+											"label": { required: true, type: "string" },
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+});
+dataFormEditor.on("ready", async () => {
+	let CREDENTIAL_MANIFEST = await fetch("../shared/CredentialManifest.json").then((response) => response.json());
+	dataFormEditor.setValue(CREDENTIAL_MANIFEST);
+	update();
+});
+dataFormEditor.on("change", () => {
+	update();
+});
+
+let dataRawEditor = document.querySelector("#data > textarea");
+dataRawEditor.addEventListener("input", () => {
+	try {
+		dataFormEditor.setValue(JSON.parse(dataRawEditor.value));
+	} catch { }
+});
+
+let previewElement = null;
+function update() {
+	previewElement?.remove();
+	previewElement = new CredentialManifest;
+	try {
+		previewElement.data = dataFormEditor.getValue();
+	} catch { }
+	document.getElementById("preview").appendChild(previewElement);
+
+	if (document.activeElement !== dataRawEditor)
+		dataRawEditor.value = JSON.stringify(dataFormEditor.getValue(), null, "\t");
+}
+
+for (let textarea of document.getElementsByTagName("textarea")) {
+	textarea.addEventListener("keydown", function(event) {
+		if (event.keyCode === 9 && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+			event.preventDefault();
+			let oldSelectionStart = textarea.selectionStart;
+			textarea.value = textarea.value.substring(0, textarea.selectionStart) + "\t" + textarea.value.substring(textarea.selectionEnd);
+			textarea.selectionEnd = oldSelectionStart + 1;
+		}
+	});
+}
+
+</script>
